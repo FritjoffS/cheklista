@@ -2,15 +2,19 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "$uid === auth.uid",
+        "checklists": {
+          "$checklistId": {
+            ".read": "auth != null",
+            ".write": "$uid === auth.uid || root.child('shared').child($checklistId).child('sharedWith').hasChildren()"
+          }
+        },
+        ".read": "auth != null",
         ".write": "$uid === auth.uid"
       }
     },
     "shared": {
-      "$checklistId": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "notifications": {
       ".read": "auth != null",
