@@ -625,6 +625,40 @@
             justify-content: center;
             font-weight: bold;
         }
+
+        /* Notification Badge */
+        .notification-bell {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Shared Checklist Styling */
+        .checklist-card.shared {
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .checklist-card.shared::before {
+            content: '🔗';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -637,6 +671,11 @@
                     <div class="user-profile" id="userProfile" style="display: none;">
                         <div class="user-avatar" id="userAvatar"></div>
                         <span id="userName"></span>
+                    </div>
+                    <div class="notification-bell" id="notificationBell" style="display: none;">
+                        <button class="btn btn-secondary btn-small" id="notificationsBtn">
+                            🔔 <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
+                        </button>
                     </div>
                     <div class="theme-selector">
                         <button class="theme-btn" id="themeBtn">🎨</button>
@@ -880,6 +919,7 @@
             authContainer.style.display = 'none';
             appContent.style.display = 'block';
             userProfile.style.display = 'flex';
+            document.getElementById('notificationBell').style.display = 'block';
             loginBtn.style.display = 'none';
             logoutBtn.style.display = 'block';
             
@@ -1065,34 +1105,100 @@
                 } else {
                     userChecklists = {};
                 }
-                renderChecklists();
+                loadSharedChecklists(); // Load shared checklists after own checklists
             });
 
-            // Listen to shared checklists
-            const sharedRef = ref(database, 'shared');
-            onValue(sharedRef, (snapshot) => {
+            // Listen to notifications for current user
+            setupNotificationListener();
+        }
+
+        async function loadSharedChecklists() {
+            try {
+                const sharedRef = ref(database, 'shared');
+                const snapshot = await get(sharedRef);
+                
                 if (snapshot.exists()) {
                     const shared = snapshot.val();
                     const userEmailKey = emailToFirebaseKey(currentUser.email);
                     
                     // Check all shared checklists to see if current user has access
-                    Object.keys(shared).forEach(checklistId => {
+                    for (const checklistId of Object.keys(shared)) {
                         const sharedChecklist = shared[checklistId];
                         if (sharedChecklist.sharedWith && sharedChecklist.sharedWith[userEmailKey]) {
-                            // Add shared checklist to user's view (mark as shared)
-                            if (!userChecklists[checklistId]) {
+                            // Load the actual checklist data from the owner
+                            const ownerChecklistRef = ref(database, `users/${sharedChecklist.owner}/checklists/${checklistId}`);
+                            const ownerSnapshot = await get(ownerChecklistRef);
+                            
+                            if (ownerSnapshot.exists()) {
+                                const ownerChecklistData = ownerSnapshot.val();
+                                
+                                // Add shared checklist to user's view (mark as shared)
                                 userChecklists[checklistId] = {
-                                    title: sharedChecklist.title + ' (Delad)',
+                                    ...ownerChecklistData,
+                                    title: ownerChecklistData.title + ' (Delad)',
                                     description: `Delad av ${sharedChecklist.ownerEmail}`,
                                     isShared: true,
                                     originalOwner: sharedChecklist.owner,
-                                    items: {}
+                                    ownerEmail: sharedChecklist.ownerEmail
                                 };
+                                
+                                // Set up real-time listener for shared checklist items
+                                onValue(ownerChecklistRef, (ownerSnapshot) => {
+                                    if (ownerSnapshot.exists()) {
+                                        const updatedData = ownerSnapshot.val();
+                                        userChecklists[checklistId] = {
+                                            ...updatedData,
+                                            title: updatedData.title + ' (Delad)',
+                                            description: `Delad av ${sharedChecklist.ownerEmail}`,
+                                            isShared: true,
+                                            originalOwner: sharedChecklist.owner,
+                                            ownerEmail: sharedChecklist.ownerEmail
+                                        };
+                                        renderChecklists();
+                                        
+                                        // Update detail view if this checklist is currently open
+                                        if (currentChecklistId === checklistId) {
+                                            renderChecklistItems();
+                                        }
+                                    }
+                                });
                             }
                         }
-                    });
+                    }
+                }
+                
+                renderChecklists();
+            } catch (error) {
+                console.error('Error loading shared checklists:', error);
+            }
+        }
+
+        function setupNotificationListener() {
+            const userEmailKey = emailToFirebaseKey(currentUser.email);
+            const notificationsRef = ref(database, 'notifications');
+            
+            onValue(notificationsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const notifications = snapshot.val();
                     
-                    renderChecklists();
+                    // Check for unread notifications for current user
+                    Object.keys(notifications).forEach(notificationId => {
+                        const notification = notifications[notificationId];
+                        if (notification.toEmailKey === userEmailKey && !notification.read) {
+                            // Show notification
+                            showNotification(
+                                `${notification.fromEmail} delade "${notification.checklistTitle}" med dig!`,
+                                'info'
+                            );
+                            
+                            // Mark as read
+                            const notificationRef = ref(database, `notifications/${notificationId}`);
+                            update(notificationRef, { read: true });
+                            
+                            // Reload shared checklists to show the new one
+                            loadSharedChecklists();
+                        }
+                    });
                 }
             });
         }
@@ -1119,7 +1225,7 @@
 
         function createChecklistCard(checklistId, checklist) {
             const card = document.createElement('div');
-            card.className = 'checklist-card';
+            card.className = `checklist-card ${checklist.isShared ? 'shared' : ''}`;
             card.addEventListener('click', () => openChecklist(checklistId));
 
             const items = checklist.items || {};
@@ -1127,11 +1233,15 @@
             const completedItems = itemsArray.filter(id => items[id].completed).length;
             const totalItems = itemsArray.length;
 
+            const sharedInfo = checklist.isShared ? 
+                `<small style="color: var(--secondary-color); font-weight: 500;">📤 Delad av ${checklist.ownerEmail}</small>` : '';
+
             card.innerHTML = `
                 <div class="checklist-header">
                     <div>
                         <h3 class="checklist-title">${checklist.title}</h3>
                         ${checklist.description ? `<p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">${checklist.description}</p>` : ''}
+                        ${sharedInfo}
                     </div>
                 </div>
                 <div class="checklist-stats">
@@ -1231,13 +1341,22 @@
             if (!text || !currentChecklistId) return;
             
             try {
-                const itemsRef = ref(database, `users/${currentUser.uid}/checklists/${currentChecklistId}/items`);
+                const checklist = userChecklists[currentChecklistId];
+                let ownerId = currentUser.uid;
+                
+                // If this is a shared checklist, use the original owner's ID
+                if (checklist.isShared) {
+                    ownerId = checklist.originalOwner;
+                }
+                
+                const itemsRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items`);
                 const newItemRef = push(itemsRef);
                 
                 await set(newItemRef, {
                     text: text,
                     completed: false,
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    addedBy: currentUser.email
                 });
                 
                 input.value = '';
@@ -1251,11 +1370,21 @@
             if (!currentChecklistId) return;
             
             try {
-                const item = userChecklists[currentChecklistId].items[itemId];
-                const itemRef = ref(database, `users/${currentUser.uid}/checklists/${currentChecklistId}/items/${itemId}`);
+                const checklist = userChecklists[currentChecklistId];
+                const item = checklist.items[itemId];
+                let ownerId = currentUser.uid;
+                
+                // If this is a shared checklist, use the original owner's ID
+                if (checklist.isShared) {
+                    ownerId = checklist.originalOwner;
+                }
+                
+                const itemRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items/${itemId}`);
                 
                 await update(itemRef, {
-                    completed: !item.completed
+                    completed: !item.completed,
+                    lastModifiedBy: currentUser.email,
+                    lastModified: serverTimestamp()
                 });
             } catch (error) {
                 showNotification('Fel vid uppdatering: ' + error.message, 'error');
@@ -1266,7 +1395,15 @@
             if (!currentChecklistId || !confirm('Är du säker på att du vill ta bort detta objekt?')) return;
             
             try {
-                const itemRef = ref(database, `users/${currentUser.uid}/checklists/${currentChecklistId}/items/${itemId}`);
+                const checklist = userChecklists[currentChecklistId];
+                let ownerId = currentUser.uid;
+                
+                // If this is a shared checklist, use the original owner's ID
+                if (checklist.isShared) {
+                    ownerId = checklist.originalOwner;
+                }
+                
+                const itemRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items/${itemId}`);
                 await remove(itemRef);
                 showNotification('Objekt borttaget!', 'success');
             } catch (error) {
