@@ -10,7 +10,7 @@
 
 ### Steg för att fixa:
 1. **Gå till [Firebase Console](https://console.firebase.google.com/)**
-2. **Välj ditt projekt: `checklista-f9bbf`**
+2. **Välj ditt projekt: `checklista-61c12`**
 3. **Klicka på "Authentication" i vänster meny**
 4. **Klicka på "Get started" om du ser det**
 5. **Gå till fliken "Sign-in method"**

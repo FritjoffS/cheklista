@@ -5,7 +5,7 @@
 
 ## Steg 1: Aktivera Firebase Authentication
 1. Gå till: https://console.firebase.google.com/
-2. Välj projekt: `checklista-f9bbf`  
+2. Välj projekt: `checklista-61c12`  
 3. Klicka "Authentication" → "Get started" → "Sign-in method"
 4. Klicka "Email/Password" → Aktivera första alternativet → "Save"
 
