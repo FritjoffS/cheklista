@@ -6,14 +6,14 @@ importScripts('https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging-comp
 
 // Initialize Firebase in the service worker
 const firebaseConfig = {
-  apiKey: "AIzaSyDMhOCALyIYv9UtNdSMFg2VHsS_8jyuWpU",
-  authDomain: "checklista-f9bbf.firebaseapp.com",
-  databaseURL: "https://checklista-f9bbf-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "checklista-f9bbf",
-  storageBucket: "checklista-f9bbf.firebasestorage.app",
-  messagingSenderId: "376058394469",
-  appId: "1:376058394469:web:0b1b1b8946ec4ab666938c",
-  measurementId: "G-GQ97VMK656"
+  apiKey: "AIzaSyBSW8Dw1EK2aj7tFQ7TvFTtHxKL8vPP48E",
+  authDomain: "checklista-61c12.firebaseapp.com",
+  databaseURL: "https://checklista-61c12-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "checklista-61c12",
+  storageBucket: "checklista-61c12.firebasestorage.app",
+  messagingSenderId: "963417616606",
+  appId: "1:963417616606:web:464768c471264003bf524f",
+  measurementId: "G-QE1P6FY7RQ"
 };
 
 firebase.initializeApp(firebaseConfig);
