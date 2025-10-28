@@ -1,8 +1,13 @@
-const CACHE_NAME = 'cheklista-v1';
+const CACHE_NAME = 'cheklista-v2';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/styles.css',
+  '/app.js',
   '/manifest.json',
+  '/icons/icon.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
   'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js',
   'https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js',
