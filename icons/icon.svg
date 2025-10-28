@@ -1,0 +1,30 @@
+﻿<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" rx="24" fill="url(#bg)"/>
+  
+  <!-- Clipboard -->
+  <rect x="48" y="32" width="96" height="128" rx="8" fill="white" opacity="0.9"/>
+  <rect x="72" y="24" width="48" height="16" rx="4" fill="white"/>
+  
+  <!-- Checkmarks -->
+  <g fill="#10b981" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="68,72 78,82 108,52"/>
+    <polyline points="68,96 78,106 108,76"/>
+    <polyline points="68,120 78,130 108,100"/>
+  </g>
+  
+  <!-- Lines for text -->
+  <g fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round">
+    <line x1="84" y1="67" x2="120" y2="67"/>
+    <line x1="84" y1="91" x2="120" y2="91"/>
+    <line x1="84" y1="115" x2="120" y2="115"/>
+    <line x1="68" y1="139" x2="120" y2="139"/>
+  </g>
+</svg>
