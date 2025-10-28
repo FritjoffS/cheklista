@@ -18,8 +18,11 @@ En modern, responsiv webb-app för att skapa och dela checklistor med realtidsup
 
 ### 👥 Delning och samarbete
 - **Dela checklistor**: Skicka till andra användare via e-post
-- **Realtidssamarbete**: Flera personer kan redigera samma lista
+- **Realtidssamarbete**: Flera personer kan redigera samma lista samtidigt
 - **Push-notifikationer**: Få meddelanden när andra gör ändringar
+- **Synliga delade listor**: Delade checklistor visas automatiskt hos mottagaren
+- **Tydlig markering**: Delade listor är märkta med särskild design och ägare
+- **Realtidsuppdateringar**: Ändringar synkroniseras direkt mellan alla användare
 
 ### 🔐 Säkerhet
 - **Firebase Authentication**: Säker inloggning med e-post/lösenord
