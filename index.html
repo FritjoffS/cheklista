@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cheklista - Din smarta checklist-app</title>
+    <title>Checklista - Din smarta checklist-app</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="icon" type="image/x-icon" href="icons/checklist.png">
@@ -17,7 +17,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <div class="logo">📋 Cheklista</div>
+                <div class="logo">📋 Checklista</div>
                 <div class="header-actions">
                     <div class="user-profile" id="userProfile" style="display: none;">
                         <div class="user-avatar" id="userAvatar"></div>
@@ -59,7 +59,7 @@
         <main class="main">
             <!-- Authentication Form -->
             <div class="auth-container" id="authContainer">
-                <h2>Välkommen till Cheklista</h2>
+                <h2>Välkommen till Checklista</h2>
                 <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
                     Skapa och dela smarta checklistor med dina vänner och familj.
                 </p>
@@ -83,7 +83,7 @@
                     <div class="checklists-header">
                         <h1>Mina Checklistor</h1>
                         <button class="btn btn-primary" id="createChecklistBtn">
-                            ➕ Skapa ny checklist
+                            ➕ Skapa ny checklista
                         </button>
                     </div>
 
@@ -93,16 +93,18 @@
 
                     <div class="empty-state" id="emptyState" style="display: none;">
                         <h3>Inga checklistor än</h3>
-                        <p>Skapa din första checklist för att komma igång!</p>
+                        <p>Skapa din första checklista för att komma igång!</p>
                     </div>
                 </div>
+
+
 
                 <!-- Checklist Detail View -->
                 <div id="checklistDetail" class="checklist-detail">
                     <div class="detail-header">
                         <div class="detail-header-content">
                             <button class="btn btn-secondary" id="backBtn">← Tillbaka</button>
-                            <h1 class="detail-title" id="detailTitle">Checklist</h1>
+                            <h1 class="detail-title" id="detailTitle">Checklista</h1>
                             <div class="detail-actions">
                                 <button class="btn btn-secondary btn-small" id="shareBtn">🔗 Dela</button>
                                 <button class="btn btn-secondary btn-small" id="deleteChecklistBtn">🗑️ Ta bort</button>
@@ -172,10 +174,7 @@
         </div>
     </div>
 
-      <!-- App Version Display -->
-  <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; z-index: 1000;">
-    v2.0.1
-  </div>
+
 
     <!-- External JavaScript -->
     <script type="module" src="app.js"></script>
