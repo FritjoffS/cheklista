@@ -17,12 +17,15 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <div class="logo">📋 Checklista</div>
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                    <div class="logo">📋 Checklista</div>
+                </div>
                 <div class="header-actions">
-                    <div class="user-profile" id="userProfile" style="display: none;">
-                        <div class="user-avatar" id="userAvatar"></div>
-                        <span id="userName"></span>
-                    </div>
                     <div class="notification-bell" id="notificationBell" style="display: none;">
                         <button class="btn btn-secondary btn-small" id="notificationsBtn">
                             🔔 <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
@@ -50,10 +53,50 @@
                         </div>
                     </div>
                     <button class="btn btn-secondary" id="loginBtn">Logga in</button>
-                    <button class="btn btn-secondary" id="logoutBtn" style="display: none;">Logga ut</button>
                 </div>
             </div>
         </header>
+
+        <!-- Sliding Menu -->
+        <nav class="slide-menu" id="slideMenu">
+            <div class="slide-menu-overlay" id="slideMenuOverlay"></div>
+            <div class="slide-menu-content">
+                <div class="slide-menu-header">
+                    <h3>Meny</h3>
+                    <button class="close-menu-btn" id="closeMenuBtn">&times;</button>
+                </div>
+                
+                <!-- User Profile Section -->
+                <div class="menu-user-profile" id="menuUserProfile" style="display: none;">
+                    <div class="menu-user-avatar" id="menuUserAvatar"></div>
+                    <div class="menu-user-info">
+                        <div class="menu-user-name" id="menuUserName"></div>
+                        <div class="menu-user-email" id="menuUserEmail"></div>
+                    </div>
+                </div>
+                
+                <ul class="slide-menu-list">
+                    <li>
+                        <button class="menu-item" id="menuHome">
+                            <span class="menu-icon">📋</span>
+                            <span class="menu-text">Mina Checklistor</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item" id="menuSettings">
+                            <span class="menu-icon">⚙️</span>
+                            <span class="menu-text">Inställningar</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item" id="menuLogout">
+                            <span class="menu-icon">🚪</span>
+                            <span class="menu-text">Logga ut</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
         <!-- Main Content -->
         <main class="main">
