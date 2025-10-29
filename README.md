@@ -1,74 +1,74 @@
 # Cheklista - Smart Checklist App
 
-En modern, responsiv webb-app för att skapa och dela checklistor med realtidsuppdateringar via Firebase.
+A modern, responsive web app for creating and sharing checklists with real-time updates via Firebase.
 
-## Funktioner
+## Features
 
-### ✅ Grundfunktioner
-- **Skapa checklistor**: Inköpslistor, TODO-listor, etc.
-- **Hantera objekt**: Lägg till, markera som klar, ta bort objekt
-- **Realtidsuppdateringar**: Se ändringar direkt via Firebase Realtime Database
-- **Responsiv design**: Fungerar perfekt på mobil och tablet
+### ✅ Core Features
+- **Create checklists**: Shopping lists, TODO lists, etc.
+- **Manage items**: Add, mark as complete, remove items
+- **Real-time updates**: See changes instantly via Firebase Realtime Database
+- **Responsive design**: Works perfectly on mobile and tablet
 
-### 🎨 Användarupplevelse
-- **4 olika teman**: Ljus, mörkt, natur och solnedgång
-- **Modern design**: Clean, användarvänligt gränssnitt
-- **PWA-stöd**: Installera som app på mobilen
-- **Offline-funktion**: Fungerar utan internetanslutning
+### 🎨 User Experience
+- **4 different themes**: Light, dark, nature, and sunset
+- **Modern design**: Clean, user-friendly interface
+- **PWA support**: Install as an app on your phone
+- **Offline functionality**: Works without internet connection
 
-### 👥 Delning och samarbete
-- **Dela checklistor**: Skicka till andra användare via e-post
-- **Realtidssamarbete**: Flera personer kan redigera samma lista samtidigt
-- **Push-notifikationer**: Få meddelanden när andra gör ändringar
-- **Synliga delade listor**: Delade checklistor visas automatiskt hos mottagaren
-- **Tydlig markering**: Delade listor är märkta med särskild design och ägare
-- **Realtidsuppdateringar**: Ändringar synkroniseras direkt mellan alla användare
+### 👥 Sharing and Collaboration
+- **Share checklists**: Send to other users via email
+- **Real-time collaboration**: Multiple people can edit the same list simultaneously
+- **Push notifications**: Get notified when others make changes
+- **Visible shared lists**: Shared checklists appear automatically for recipients
+- **Clear marking**: Shared lists are marked with special design and owner info
+- **Real-time updates**: Changes sync instantly between all users
 
-### 🔐 Säkerhet
-- **Firebase Authentication**: Säker inloggning med e-post/lösenord
-- **Användarspecifik data**: Varje användare ser bara sina egna listor
-- **Delningsbehörigheter**: Kontrollera vem som kan redigera
+### 🔐 Security
+- **Firebase Authentication**: Secure login with email/password
+- **User-specific data**: Each user sees only their own lists
+- **Sharing permissions**: Control who can edit
 
-## Teknisk specifikation
+## Technical Specification
 
 ### Frontend
-- **HTML5**: Semantisk markup och tillgänglighet
-- **CSS3**: Moderna CSS-funktioner, CSS Grid, Flexbox
+- **HTML5**: Semantic markup and accessibility
+- **CSS3**: Modern CSS features, CSS Grid, Flexbox
 - **Vanilla JavaScript**: ES6+ modules, async/await
 - **PWA**: Service Worker, Web App Manifest
 
 ### Backend (Firebase)
-- **Realtime Database**: Snabba uppdateringar i realtid
-- **Authentication**: Säker användarhantering
-- **Cloud Messaging**: Push-notifikationer
-- **Analytics**: Användningsstatistik
+- **Realtime Database**: Fast real-time updates
+- **Authentication**: Secure user management
+- **Cloud Messaging**: Push notifications
+- **Analytics**: Usage statistics
 
-### Responsiv design
-- **Mobile-first**: Optimerad för mobila enheter
-- **Tablet-anpassad**: Använder större skärmar effektivt
-- **Touch-vänlig**: Stora klickbara ytor
+### Responsive Design
+- **Mobile-first**: Optimized for mobile devices
+- **Tablet-adapted**: Efficiently uses larger screens
+- **Touch-friendly**: Large clickable areas
 
-## Installation och användning
+## Installation and Usage
 
-### Förutsättningar
-- Modern webbläsare (Chrome, Firefox, Safari, Edge)
-- Internetanslutning för första inställningen
-- Firebase-projekt konfigurerat
+### Prerequisites
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection for initial setup
+- Configured Firebase project
 
-### Snabbstart
-1. Öppna `index.html` i en webbläsare
-2. Registrera ett konto eller logga in
-3. Skapa din första checklist
-4. Börja lägga till objekt!
+### Quick Start
+1. Open `index.html` in a web browser
+2. Register an account or log in
+3. Create your first checklist
+4. Start adding items!
 
-### PWA-installation
-1. Öppna appen i Chrome/Edge på mobilen
-2. Tryck på "Lägg till på startskärmen"
-3. Appen installeras som en native app
+### PWA Installation
+1. Open the app in Chrome/Edge on your phone
+2. Tap "Add to Home Screen"
+3. The app installs as a native app
 
-## Firebase-konfiguration
+## Firebase Configuration
 
-Appen är redan konfigurerad med följande Firebase-projekt:
+The app is already configured with the following Firebase project:
 ```javascript
 const firebaseConfig = {
   apiKey: "AIzaSyBSW8Dw1EK2aj7tFQ7TvFTtHxKL8vPP48E",
@@ -82,9 +82,9 @@ const firebaseConfig = {
 };
 ```
 
-## Datastruktur
+## Data Structure
 
-### Användare
+### Users
 ```json
 {
   "users": {
@@ -93,12 +93,12 @@ const firebaseConfig = {
       "fcmToken": "notification-token",
       "checklists": {
         "checklistId": {
-          "title": "Min inköpslista",
-          "description": "Handla till helgen",
+          "title": "My shopping list",
+          "description": "Shopping for the weekend",
           "createdAt": "timestamp",
           "items": {
             "itemId": {
-              "text": "Mjölk",
+              "text": "Milk",
               "completed": false,
               "createdAt": "timestamp"
             }
@@ -110,14 +110,14 @@ const firebaseConfig = {
 }
 ```
 
-### Delade checklistor
+### Shared Checklists
 ```json
 {
   "shared": {
     "checklistId": {
       "owner": "userId",
       "ownerEmail": "owner@example.com",
-      "title": "Delad lista",
+      "title": "Shared list",
       "sharedWith": {
         "user_at_example_com": {
           "email": "user@example.com",
@@ -130,37 +130,36 @@ const firebaseConfig = {
 }
 ```
 
-**Obs!** E-postadresser konverteras till Firebase-säkra nycklar genom att ersätta:
-- `@` med `_at_`
-- `.` med `_`
-- Andra ogiltiga tecken (`#`, `$`, `[`, `]`) med `_`
-```
+**Note!** Email addresses are converted to Firebase-safe keys by replacing:
+- `@` with `_at_`
+- `.` with `_`
+- Other invalid characters (`#`, `$`, `[`, `]`) with `_`
 
-## Användning
+## Usage
 
-### Skapa en checklist
-1. Klicka på "Skapa ny checklist"
-2. Ange titel och beskrivning
-3. Klicka "Skapa checklist"
+### Create a Checklist
+1. Click "Create new checklist"
+2. Enter title and description
+3. Click "Create checklist"
 
-### Lägga till objekt
-1. Öppna en checklist
-2. Skriv i "Lägg till nytt objekt" fältet
-3. Tryck Enter eller klicka "Lägg till"
+### Add Items
+1. Open a checklist
+2. Type in the "Add new item" field
+3. Press Enter or click "Add"
 
-### Dela en checklist
-1. Öppna checklistan du vill dela
-2. Klicka på "Dela" knappen
-3. Ange e-postadressen till personen
-4. Välj om de ska få en notifikation
-5. Klicka "Dela checklist"
+### Share a Checklist
+1. Open the checklist you want to share
+2. Click the "Share" button
+3. Enter the email address of the person
+4. Choose if they should get a notification
+5. Click "Share checklist"
 
-### Byta tema
-1. Klicka på 🎨 ikonen i headern
-2. Välj önskat tema från dropdown-menyn
-3. Temat sparas automatiskt
+### Change Theme
+1. Click the 🎨 icon in the header
+2. Select desired theme from dropdown menu
+3. Theme is saved automatically
 
-## Browser-kompatibilitet
+## Browser Compatibility
 
 - ✅ Chrome 90+
 - ✅ Firefox 88+
@@ -168,35 +167,35 @@ const firebaseConfig = {
 - ✅ Edge 90+
 - ✅ Samsung Internet 14+
 
-## Säkerhet
+## Security
 
-- All data krypteras under transport (HTTPS)
-- Firebase säkerhetsregler skyddar användardata
-- Ingen känslig data lagras lokalt
-- Regelbundna säkerhetsuppdateringar
+- All data encrypted in transit (HTTPS)
+- Firebase security rules protect user data
+- No sensitive data stored locally
+- Regular security updates
 
-## Utveckling
+## Development
 
-### Föreslagna förbättringar
-- [ ] Offline-synkronisering
-- [ ] Bilagor och bilder
-- [ ] Kategorisering av checklistor
-- [ ] Export till PDF/Excel
-- [ ] Påminnelser och deadlines
-- [ ] Röstinmatning
-- [ ] Återkommande checklistor
+### Suggested Improvements
+- [ ] Offline synchronization
+- [ ] Attachments and images
+- [ ] Checklist categorization
+- [ ] Export to PDF/Excel
+- [ ] Reminders and deadlines
+- [ ] Voice input
+- [ ] Recurring checklists
 
-### Bidrag
-Förslag och förbättringar välkomnas! Skapa gärna issues eller pull requests.
+### Contributing
+Suggestions and improvements are welcome! Feel free to create issues or pull requests.
 
-## Licens
+## License
 
-Detta projekt är open source och tillgängligt under MIT-licensen.
+This project is open source and available under the MIT License.
 
 ## Support
 
-För support och frågor, kontakta utvecklaren eller skapa ett issue på GitHub.
+For support and questions, contact the developer or create an issue on GitHub.
 
 ---
 
-**Cheklista** - Din smarta följeslagare för att hålla ordning på allt! 📋✨
+**Cheklista** - Your smart companion for keeping track of everything! 📋✨
