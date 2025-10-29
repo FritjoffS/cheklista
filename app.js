@@ -50,6 +50,10 @@ let currentChecklistId = null;
 let userChecklists = {};
 let userNotifications = [];
 
+// PWA Installation variables
+let deferredPrompt = null;
+const installAppBtn = document.getElementById('installAppBtn');
+
 // DOM elements
 const authContainer = document.getElementById('authContainer');
 const appContent = document.getElementById('appContent');
@@ -73,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupFirebaseAuth();
     requestNotificationPermission();
+    setupPWAInstallation();
+    handleURLParameters();
 });
 
 // Authentication
@@ -180,6 +186,9 @@ function setupEventListeners() {
         closeSlideMenu();
         handleLogout();
     });
+
+    // PWA Installation
+    if (installAppBtn) installAppBtn.addEventListener('click', handleInstallApp);
 
     // Close modals on outside click
     document.querySelectorAll('.modal').forEach(modal => {
@@ -1156,4 +1165,168 @@ function showUpdateNotification() {
             notification.remove();
         }
     }, 10000);
+}
+
+// Handle URL parameters for PWA shortcuts
+function handleURLParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'create') {
+        // Wait for auth to complete before trying to show create modal
+        const checkAuth = () => {
+            if (currentUser) {
+                showCreateModal();
+            } else {
+                setTimeout(checkAuth, 100);
+            }
+        };
+        checkAuth();
+    }
+}
+
+// PWA Installation functionality
+function setupPWAInstallation() {
+    // Listen for the beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        
+        // Store the event for later use
+        deferredPrompt = e;
+        
+        // Show the install button
+        if (installAppBtn) {
+            installAppBtn.style.display = 'block';
+        }
+    });
+
+    // Listen for the app installed event
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        
+        // Hide the install button
+        if (installAppBtn) {
+            installAppBtn.style.display = 'none';
+        }
+        
+        // Show success notification
+        showNotification('Appen har installerats! Du kan nu öppna den från hemskärmen.', 'success');
+        
+        // Clear the deferredPrompt
+        deferredPrompt = null;
+    });
+
+    // Check if app is already installed (iOS/Android)
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+        // App is already installed, hide install button
+        if (installAppBtn) {
+            installAppBtn.style.display = 'none';
+        }
+    }
+}
+
+async function handleInstallApp() {
+    if (!deferredPrompt) {
+        // Check if running in standalone mode (already installed)
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+            showNotification('Appen är redan installerad!', 'info');
+            return;
+        }
+        
+        // Show manual installation instructions
+        showInstallInstructions();
+        return;
+    }
+
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        showNotification('Appen installeras...', 'success');
+    } else {
+        console.log('User dismissed the install prompt');
+        showNotification('Installation avbruten', 'info');
+    }
+    
+    // Clear the deferredPrompt since it can only be used once
+    deferredPrompt = null;
+    
+    // Hide the install button
+    if (installAppBtn) {
+        installAppBtn.style.display = 'none';
+    }
+}
+
+function showInstallInstructions() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    let instructions = '';
+    
+    if (isIOS) {
+        instructions = `
+            <div style="text-align: left;">
+                <h3>Installera på iOS:</h3>
+                <ol>
+                    <li>Tryck på dela-knappen <span style="font-size: 1.2em;">⬆️</span> längst ner</li>
+                    <li>Scrolla ner och välj "Lägg till på hemskärmen"</li>
+                    <li>Tryck på "Lägg till"</li>
+                </ol>
+            </div>
+        `;
+    } else if (isAndroid) {
+        instructions = `
+            <div style="text-align: left;">
+                <h3>Installera på Android:</h3>
+                <ol>
+                    <li>Tryck på meny-knappen ⋮ i webbläsaren</li>
+                    <li>Välj "Lägg till på startskärmen" eller "Installera app"</li>
+                    <li>Tryck på "Lägg till" eller "Installera"</li>
+                </ol>
+            </div>
+        `;
+    } else {
+        instructions = `
+            <div style="text-align: left;">
+                <h3>Installera på dator:</h3>
+                <p>I Chrome, Edge eller liknande webbläsare:</p>
+                <ol>
+                    <li>Leta efter installera-ikonen i adressfältet</li>
+                    <li>Eller gå till menyn och välj "Installera Cheklista"</li>
+                    <li>Följ instruktionerna för att installera</li>
+                </ol>
+            </div>
+        `;
+    }
+    
+    // Create and show instruction modal
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Installera Cheklista</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                ${instructions}
+                <p style="margin-top: 1.5rem; color: var(--text-secondary);">
+                    Efter installation kan du använda appen utan internetanslutning och få snabbare åtkomst från hemskärmen.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Stäng</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close menu after showing instructions
+    closeSlideMenu();
 }
