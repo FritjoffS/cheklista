@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cheklista-v2.0.1';
+const CACHE_NAME = 'cheklista-v3.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -17,32 +17,59 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => {
+        // Force the waiting service worker to become the active service worker
+        return self.skipWaiting();
+      })
   );
 });
 
-// Fetch event - serve from cache when possible
+// Fetch event - network first strategy for better development experience
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
-  );
+  // For HTML, CSS, and JS files, always try network first during development
+  if (event.request.destination === 'document' || 
+      event.request.url.endsWith('.html') ||
+      event.request.url.endsWith('.css') ||
+      event.request.url.endsWith('.js')) {
+    
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // If network succeeds, update cache and return response
+          if (networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // If network fails, try cache
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // For other resources (icons, etc.), use cache first
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => {
+          return response || fetch(event.request);
+        })
+    );
+  }
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control
 self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -53,6 +80,9 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      // Claim all clients immediately
+      return self.clients.claim();
     })
   );
 });
