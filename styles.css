@@ -8,16 +8,23 @@
     --warning-color: #f59e0b;
     --background-color: #ffffff;
     --surface-color: #f8fafc;
+    --bg-color: #ffffff;
+    --bg-secondary: #f8fafc;
+    --hover-color: #f1f5f9;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
     --border-color: #e5e7eb;
     --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="dark"] {
     --background-color: #0f172a;
     --surface-color: #1e293b;
+    --bg-color: #1e293b;
+    --bg-secondary: #334155;
+    --hover-color: #475569;
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     --border-color: #334155;
@@ -29,6 +36,9 @@
     --secondary-color: #84cc16;
     --background-color: #f0fdf4;
     --surface-color: #dcfce7;
+    --bg-color: #ffffff;
+    --bg-secondary: #f0fdf4;
+    --hover-color: #ecfdf5;
 }
 
 [data-theme="sunset"] {
@@ -37,6 +47,9 @@
     --secondary-color: #f97316;
     --background-color: #fef2f2;
     --surface-color: #fee2e2;
+    --bg-color: #ffffff;
+    --bg-secondary: #fef2f2;
+    --hover-color: #fef7f7;
 }
 
 * {
@@ -145,7 +158,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     cursor: pointer;
 }
 
@@ -156,10 +169,20 @@ body {
     width: 280px;
     height: 100%;
     background: var(--bg-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: var(--shadow-xl);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
+    border-right: 1px solid var(--border-color);
+    
+    /* Extra solid background for better visibility */
+    background: linear-gradient(to right, 
+        var(--bg-color) 0%, 
+        var(--bg-color) 85%, 
+        rgba(255, 255, 255, 0.95) 100%
+    );
 }
 
 .slide-menu.active .slide-menu-content {
@@ -285,6 +308,58 @@ body {
 .menu-text {
     font-size: 1rem;
     font-weight: 500;
+}
+
+/* Menu Theme Selector */
+.menu-theme-selector {
+    position: relative;
+}
+
+.menu-arrow {
+    margin-left: auto;
+    font-size: 0.875rem;
+    transition: transform 0.2s;
+}
+
+.menu-theme-selector.active .menu-arrow {
+    transform: rotate(90deg);
+}
+
+.menu-theme-dropdown {
+    display: none;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 0.5rem 0;
+}
+
+.menu-theme-selector.active .menu-theme-dropdown {
+    display: block;
+}
+
+.menu-theme-dropdown .theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 3rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.menu-theme-dropdown .theme-option:hover {
+    background: var(--hover-color);
+}
+
+.menu-theme-dropdown .theme-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .logo {
