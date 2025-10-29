@@ -71,7 +71,7 @@ A modern, responsive web app for creating and sharing checklists with real-time 
 The app is already configured with the following Firebase project:
 ```javascript
 const firebaseConfig = {
-  apiKey: "AIzaSyBSW8Dw1EK2aj7tFQ7TvFTtHxKL8vPP48E",
+  apiKey: "---------------------------------------",
   authDomain: "checklista-61c12.firebaseapp.com",
   databaseURL: "https://checklista-61c12-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "checklista-61c12",
