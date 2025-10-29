@@ -337,6 +337,12 @@ function setupRealtimeListeners() {
         loadSharedChecklists(); // Load shared checklists after own checklists
     });
 
+    // Listen to shared checklists for real-time updates
+    const sharedRef = ref(database, 'shared');
+    onValue(sharedRef, (snapshot) => {
+        loadSharedChecklists(); // Reload when sharing info changes
+    });
+
     // Listen to notifications for current user
     setupNotificationListener();
 }
@@ -350,10 +356,23 @@ async function loadSharedChecklists() {
             const shared = snapshot.val();
             const userEmailKey = emailToFirebaseKey(currentUser.email);
             
-            // Check all shared checklists to see if current user has access
+            // Check all shared checklists to see if current user has access or is owner
             for (const checklistId of Object.keys(shared)) {
                 const sharedChecklist = shared[checklistId];
-                if (sharedChecklist.sharedWith && sharedChecklist.sharedWith[userEmailKey]) {
+                
+                // Check if user is the owner of this shared checklist
+                if (sharedChecklist.owner === currentUser.uid) {
+                    // This is a checklist the current user has shared with others
+                    if (userChecklists[checklistId]) {
+                        const sharedWithEmails = Object.keys(sharedChecklist.sharedWith || {})
+                            .map(key => sharedChecklist.sharedWith[key].email);
+                        
+                        userChecklists[checklistId].isOwnerShared = true;
+                        userChecklists[checklistId].sharedWithUsers = sharedWithEmails;
+                    }
+                }
+                // Check if user has access to this shared checklist (existing functionality)
+                else if (sharedChecklist.sharedWith && sharedChecklist.sharedWith[userEmailKey]) {
                     // Load the actual checklist data from the owner
                     const ownerChecklistRef = ref(database, `users/${sharedChecklist.owner}/checklists/${checklistId}`);
                     const ownerSnapshot = await get(ownerChecklistRef);
@@ -454,7 +473,7 @@ function renderChecklists() {
 
 function createChecklistCard(checklistId, checklist) {
     const card = document.createElement('div');
-    card.className = `checklist-card ${checklist.isShared ? 'shared' : ''}`;
+    card.className = `checklist-card ${checklist.isShared ? 'shared' : ''} ${checklist.isOwnerShared ? 'owner-shared' : ''}`;
     card.addEventListener('click', () => openChecklist(checklistId));
 
     const items = checklist.items || {};
@@ -462,8 +481,20 @@ function createChecklistCard(checklistId, checklist) {
     const completedItems = itemsArray.filter(id => items[id].completed).length;
     const totalItems = itemsArray.length;
 
-    const sharedInfo = checklist.isShared ? 
-        `<small style="color: var(--secondary-color); font-weight: 500;">📤 Delad av ${checklist.ownerEmail}</small>` : '';
+    // Different sharing info based on type
+    let sharedInfo = '';
+    let tooltipData = '';
+    
+    if (checklist.isShared) {
+        // This is a list shared with the current user
+        sharedInfo = `<small style="color: var(--secondary-color); font-weight: 500;">📤 Delad av ${checklist.ownerEmail}</small>`;
+    } else if (checklist.isOwnerShared && checklist.sharedWithUsers && checklist.sharedWithUsers.length > 0) {
+        // This is a list the current user has shared with others
+        const sharedWithText = checklist.sharedWithUsers.length === 1 
+            ? checklist.sharedWithUsers[0]
+            : `${checklist.sharedWithUsers[0]} +${checklist.sharedWithUsers.length - 1} till`;
+        sharedInfo = `<small style="color: var(--primary-color); font-weight: 500; cursor: help;" title="Delad med: ${checklist.sharedWithUsers.join(', ')}">👥 Delad med ${sharedWithText}</small>`;
+    }
 
     card.innerHTML = `
         <div class="checklist-header">
@@ -498,6 +529,19 @@ function openChecklist(checklistId) {
     const checklist = userChecklists[checklistId];
     
     document.getElementById('detailTitle').textContent = checklist.title;
+    
+    // Update sharing info in detail view
+    const detailSharingInfo = document.getElementById('detailSharingInfo');
+    if (checklist.isShared) {
+        detailSharingInfo.innerHTML = `<small style="color: var(--secondary-color);">📤 Delad av ${checklist.ownerEmail}</small>`;
+        detailSharingInfo.style.display = 'block';
+    } else if (checklist.isOwnerShared && checklist.sharedWithUsers && checklist.sharedWithUsers.length > 0) {
+        const usersList = checklist.sharedWithUsers.join(', ');
+        detailSharingInfo.innerHTML = `<small style="color: var(--primary-color);">👥 Delad med: ${usersList}</small>`;
+        detailSharingInfo.style.display = 'block';
+    } else {
+        detailSharingInfo.style.display = 'none';
+    }
     
     checklistsView.style.display = 'none';
     checklistDetail.classList.add('active');
@@ -949,20 +993,35 @@ async function handleShare(e) {
         const checklist = userChecklists[currentChecklistId];
         const emailKey = emailToFirebaseKey(email);
         
-        // Create shared checklist entry
+        // Check if shared entry exists, if not create it, otherwise update it
         const sharedRef = ref(database, `shared/${currentChecklistId}`);
-        await set(sharedRef, {
-            owner: currentUser.uid,
-            ownerEmail: currentUser.email,
-            title: checklist.title,
-            sharedWith: {
-                [emailKey]: {
+        const existingSnapshot = await get(sharedRef);
+        
+        if (existingSnapshot.exists()) {
+            // Update existing shared entry with new user
+            const existingData = existingSnapshot.val();
+            await update(sharedRef, {
+                [`sharedWith/${emailKey}`]: {
                     email: email,
                     sharedAt: serverTimestamp(),
                     permissions: 'edit'
                 }
-            }
-        });
+            });
+        } else {
+            // Create new shared checklist entry
+            await set(sharedRef, {
+                owner: currentUser.uid,
+                ownerEmail: currentUser.email,
+                title: checklist.title,
+                sharedWith: {
+                    [emailKey]: {
+                        email: email,
+                        sharedAt: serverTimestamp(),
+                        permissions: 'edit'
+                    }
+                }
+            });
+        }
         
         if (notify) {
             // Send notification (simplified)
@@ -971,6 +1030,9 @@ async function handleShare(e) {
         
         hideShareModal();
         showNotification(`Checklist delad med ${email}!`, 'success');
+        
+        // Reload shared checklists to update sharing info
+        loadSharedChecklists();
     } catch (error) {
         console.error('Sharing error:', error);
         showNotification('Fel vid delning: ' + error.message, 'error');
