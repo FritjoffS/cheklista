@@ -2,6 +2,22 @@
 
 Alla viktiga ändringar i detta projekt dokumenteras i denna fil.
 
+## [3.0.0] - 25-10-29
+
+### Fixade cache-problemet:
+ - Uppdaterade Service Worker strategin:
+   Network First för HTML, CSS och JS-filer - alltid försöker hämta från nätverket först
+   Cache First för ikoner och andra statiska resurser
+   Automatisk cache-uppdatering när nätverket svarar
+ - Förbättrade Service Worker livscykeln:
+   skipWaiting() - ny service worker aktiveras omedelbart
+   clients.claim() - tar över alla öppna flikar direkt
+   Automatisk uppdateringsdetektering
+ - Lade till smart uppdateringsnotifikation:
+   Visar notifikation när ny version finns tillgänglig
+   Användaren kan välja att uppdatera nu eller senare
+   Automatisk omladdning när service worker uppdateras
+
 ## [2.0.1] - 25-10-29
 
 ### test av version-update.bat
