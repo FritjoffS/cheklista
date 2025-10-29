@@ -52,9 +52,13 @@ let userChecklists = {};
 // DOM elements
 const authContainer = document.getElementById('authContainer');
 const appContent = document.getElementById('appContent');
-const userProfile = document.getElementById('userProfile');
-const userName = document.getElementById('userName');
-const userAvatar = document.getElementById('userAvatar');
+const userProfile = document.getElementById('userProfile'); // May not exist
+const userName = document.getElementById('userName'); // May not exist  
+const userAvatar = document.getElementById('userAvatar'); // May not exist
+const menuUserProfile = document.getElementById('menuUserProfile');
+const menuUserName = document.getElementById('menuUserName');
+const menuUserEmail = document.getElementById('menuUserEmail');
+const menuUserAvatar = document.getElementById('menuUserAvatar');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const checklistsGrid = document.getElementById('checklistsGrid');
@@ -88,22 +92,35 @@ function setupFirebaseAuth() {
 function showAuth() {
     authContainer.style.display = 'block';
     appContent.style.display = 'none';
-    userProfile.style.display = 'none';
+    if (userProfile) userProfile.style.display = 'none';
+    if (menuUserProfile) menuUserProfile.style.display = 'none';
     loginBtn.style.display = 'block';
-    logoutBtn.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'none';
 }
 
 function showApp() {
     authContainer.style.display = 'none';
     appContent.style.display = 'block';
-    userProfile.style.display = 'flex';
-    document.getElementById('notificationBell').style.display = 'block';
+    if (userProfile) userProfile.style.display = 'none'; // Keep old profile hidden
+    if (menuUserProfile) menuUserProfile.style.display = 'flex'; // Show new profile in menu
+    const notificationBell = document.getElementById('notificationBell');
+    if (notificationBell) notificationBell.style.display = 'block';
     loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'block';
+    if (logoutBtn) logoutBtn.style.display = 'block';
     
-    // Update user info
-    userName.textContent = currentUser.email.split('@')[0];
-    userAvatar.textContent = currentUser.email[0].toUpperCase();
+    // Update user info in menu
+    const email = currentUser.email;
+    const username = email.split('@')[0];
+    const firstLetter = email[0].toUpperCase();
+    
+    // Update old elements (if they exist - for compatibility)
+    if (userName) userName.textContent = username;
+    if (userAvatar) userAvatar.textContent = firstLetter;
+    
+    // Update new menu elements
+    if (menuUserName) menuUserName.textContent = username;
+    if (menuUserEmail) menuUserEmail.textContent = email;
+    if (menuUserAvatar) menuUserAvatar.textContent = firstLetter;
     
     showChecklistsView();
 }
@@ -113,7 +130,7 @@ function setupEventListeners() {
     // Authentication
     document.getElementById('authForm').addEventListener('submit', handleAuth);
     document.getElementById('loginBtn').addEventListener('click', () => showAuth());
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    if (logoutBtn) document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
     // Theme
     document.getElementById('themeBtn').addEventListener('click', toggleThemeDropdown);
@@ -137,6 +154,30 @@ function setupEventListeners() {
     document.getElementById('closeShareModal').addEventListener('click', hideShareModal);
     document.getElementById('shareForm').addEventListener('submit', handleShare);
 
+    // Hamburger menu - with null checks
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    const slideMenuOverlay = document.getElementById('slideMenuOverlay');
+    const menuHome = document.getElementById('menuHome');
+    const menuSettings = document.getElementById('menuSettings');
+    const menuLogout = document.getElementById('menuLogout');
+
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSlideMenu);
+    if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSlideMenu);
+    if (slideMenuOverlay) slideMenuOverlay.addEventListener('click', closeSlideMenu);
+    if (menuHome) menuHome.addEventListener('click', () => {
+        closeSlideMenu();
+        showChecklistsView();
+    });
+    if (menuSettings) menuSettings.addEventListener('click', () => {
+        closeSlideMenu();
+        showSettingsModal();
+    });
+    if (menuLogout) menuLogout.addEventListener('click', () => {
+        closeSlideMenu();
+        handleLogout();
+    });
+
     // Close modals on outside click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
@@ -144,6 +185,13 @@ function setupEventListeners() {
                 modal.classList.remove('active');
             }
         });
+    });
+
+    // Close slide menu on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSlideMenu();
+        }
     });
 }
 
@@ -607,6 +655,39 @@ function showShareModal() {
 function hideShareModal() {
     document.getElementById('shareModal').classList.remove('active');
     document.getElementById('shareForm').reset();
+}
+
+// Hamburger menu functions
+function toggleSlideMenu() {
+    const menu = document.getElementById('slideMenu');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    
+    if (!menu || !hamburgerBtn) return;
+    
+    if (menu.classList.contains('active')) {
+        closeSlideMenu();
+    } else {
+        menu.classList.add('active');
+        hamburgerBtn.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent body scroll
+    }
+}
+
+function closeSlideMenu() {
+    const menu = document.getElementById('slideMenu');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    
+    if (!menu || !hamburgerBtn) return;
+    
+    menu.classList.remove('active');
+    hamburgerBtn.classList.remove('active');
+    document.body.style.overflow = ''; // Restore body scroll
+}
+
+function showSettingsModal() {
+    // For now, just show the theme selector
+    const themeDropdown = document.getElementById('themeDropdown');
+    themeDropdown.style.display = themeDropdown.style.display === 'block' ? 'none' : 'block';
 }
 
 // Checklist CRUD operations
