@@ -221,7 +221,28 @@
         </div>
     </div>
 
-
+    <!-- Notifications Modal -->
+    <div class="modal" id="notificationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Meddelanden</h2>
+                <div class="notification-actions">
+                    <button class="btn btn-secondary btn-small" id="markAllRead">Markera alla som lästa</button>
+                    <button class="btn btn-secondary btn-small" id="clearAllNotifications">Rensa alla</button>
+                    <button class="close-btn" id="closeNotificationsModal">&times;</button>
+                </div>
+            </div>
+            <div class="notifications-content">
+                <div id="notificationsList" class="notifications-list">
+                    <!-- Notifications will be loaded here -->
+                </div>
+                <div id="noNotifications" class="empty-state" style="display: none;">
+                    <h3>Inga meddelanden</h3>
+                    <p>Du har inga meddelanden än!</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- External JavaScript -->
     <script type="module" src="app.js"></script>
