@@ -2,6 +2,13 @@
 
 Alla viktiga ändringar i detta projekt dokumenteras i denna fil.
 
+## [3.1.0] - 25-10-29
+
+### Lade till hamburgermeny
+ - Installera appen i menyn
+ - Sluta dela listor
+ - Visa vem listan är delad med
+
 ## [3.0.0] - 25-10-29
 
 ### Fixade cache-problemet:
