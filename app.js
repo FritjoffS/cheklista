@@ -914,7 +914,7 @@ async function deleteCurrentChecklist() {
         await remove(checklistRef);
         
         showChecklistsView();
-        showNotification('Checklist borttagen!', 'success');
+        showNotification('Checklista borttagen!', 'success');
     } catch (error) {
         showNotification('Fel vid borttagning: ' + error.message, 'error');
     }
