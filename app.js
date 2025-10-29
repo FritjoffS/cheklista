@@ -791,15 +791,82 @@ function showNotification(message, type = 'success') {
     }, 5000);
 }
 
-// Service Worker Registration
+// Service Worker Registration with update handling
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
                 console.log('SW registered: ', registration);
+                
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Show update notification
+                            showUpdateNotification();
+                        }
+                    });
+                });
             })
             .catch((registrationError) => {
                 console.log('SW registration failed: ', registrationError);
             });
+            
+        // Listen for controller changes (new SW taking over)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // Reload the page to get the latest content
+            window.location.reload();
+        });
     });
+}
+
+// Show update notification
+function showUpdateNotification() {
+    // Create update notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--primary-600);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        max-width: 300px;
+        font-size: 14px;
+    `;
+    
+    notification.innerHTML = `
+        <div style="margin-bottom: 0.5rem; font-weight: 600;">Uppdatering tillgänglig!</div>
+        <div style="margin-bottom: 1rem; opacity: 0.9;">En ny version av appen är tillgänglig.</div>
+        <button onclick="window.location.reload()" style="
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        ">Uppdatera nu</button>
+        <button onclick="this.parentElement.remove()" style="
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        ">Senare</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 10 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 10000);
 }
