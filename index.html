@@ -31,27 +31,6 @@
                             🔔 <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
                         </button>
                     </div>
-                    <div class="theme-selector">
-                        <button class="theme-btn" id="themeBtn">🎨</button>
-                        <div class="theme-dropdown" id="themeDropdown">
-                            <div class="theme-option" data-theme="light">
-                                <div class="theme-color" style="background: #6366f1;"></div>
-                                Ljus tema
-                            </div>
-                            <div class="theme-option" data-theme="dark">
-                                <div class="theme-color" style="background: #0f172a;"></div>
-                                Mörkt tema
-                            </div>
-                            <div class="theme-option" data-theme="nature">
-                                <div class="theme-color" style="background: #059669;"></div>
-                                Natur tema
-                            </div>
-                            <div class="theme-option" data-theme="sunset">
-                                <div class="theme-color" style="background: #dc2626;"></div>
-                                Solnedgång tema
-                            </div>
-                        </div>
-                    </div>
                     <button class="btn btn-secondary" id="loginBtn">Logga in</button>
                 </div>
             </div>
@@ -83,10 +62,31 @@
                         </button>
                     </li>
                     <li>
-                        <button class="menu-item" id="menuSettings">
-                            <span class="menu-icon">⚙️</span>
-                            <span class="menu-text">Inställningar</span>
-                        </button>
+                        <div class="menu-theme-selector">
+                            <button class="menu-item" id="menuTheme">
+                                <span class="menu-icon">🎨</span>
+                                <span class="menu-text">Tema</span>
+                                <span class="menu-arrow">▶</span>
+                            </button>
+                            <div class="menu-theme-dropdown" id="menuThemeDropdown">
+                                <div class="theme-option" data-theme="light">
+                                    <div class="theme-color" style="background: #6366f1;"></div>
+                                    Ljus tema
+                                </div>
+                                <div class="theme-option" data-theme="dark">
+                                    <div class="theme-color" style="background: #0f172a;"></div>
+                                    Mörkt tema
+                                </div>
+                                <div class="theme-option" data-theme="nature">
+                                    <div class="theme-color" style="background: #059669;"></div>
+                                    Natur tema
+                                </div>
+                                <div class="theme-option" data-theme="sunset">
+                                    <div class="theme-color" style="background: #dc2626;"></div>
+                                    Solnedgång tema
+                                </div>
+                            </div>
+                        </div>
                     </li>
                     <li>
                         <button class="menu-item" id="menuLogout">
