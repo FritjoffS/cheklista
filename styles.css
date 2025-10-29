@@ -721,7 +721,19 @@ body {
 .detail-title {
     font-size: 1.5rem;
     font-weight: 600;
+    margin: 0;
+}
+
+.detail-title-section {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-sharing-info {
+    font-size: 0.875rem;
+    opacity: 0.8;
 }
 
 .detail-actions {
@@ -1039,4 +1051,19 @@ body {
     top: 0.5rem;
     right: 0.5rem;
     font-size: 1.2rem;
+}
+
+/* Owner Shared Checklist Styling */
+.checklist-card.owner-shared {
+    border-left: 4px solid var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color-alpha), transparent);
+}
+
+.checklist-card.owner-shared::before {
+    content: '👥';
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 1.2rem;
+    color: var(--primary-color);
 }
