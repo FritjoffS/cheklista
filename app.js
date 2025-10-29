@@ -132,10 +132,6 @@ function setupEventListeners() {
     document.getElementById('loginBtn').addEventListener('click', () => showAuth());
     if (logoutBtn) document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
-    // Theme
-    document.getElementById('themeBtn').addEventListener('click', toggleThemeDropdown);
-    document.getElementById('themeDropdown').addEventListener('click', handleThemeSelect);
-
     // Checklists
     document.getElementById('createChecklistBtn').addEventListener('click', showCreateModal);
     document.getElementById('closeCreateModal').addEventListener('click', hideCreateModal);
@@ -159,7 +155,8 @@ function setupEventListeners() {
     const closeMenuBtn = document.getElementById('closeMenuBtn');
     const slideMenuOverlay = document.getElementById('slideMenuOverlay');
     const menuHome = document.getElementById('menuHome');
-    const menuSettings = document.getElementById('menuSettings');
+    const menuTheme = document.getElementById('menuTheme');
+    const menuThemeDropdown = document.getElementById('menuThemeDropdown');
     const menuLogout = document.getElementById('menuLogout');
 
     if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSlideMenu);
@@ -169,10 +166,8 @@ function setupEventListeners() {
         closeSlideMenu();
         showChecklistsView();
     });
-    if (menuSettings) menuSettings.addEventListener('click', () => {
-        closeSlideMenu();
-        showSettingsModal();
-    });
+    if (menuTheme) menuTheme.addEventListener('click', toggleMenuThemeDropdown);
+    if (menuThemeDropdown) menuThemeDropdown.addEventListener('click', handleMenuThemeSelect);
     if (menuLogout) menuLogout.addEventListener('click', () => {
         closeSlideMenu();
         handleLogout();
@@ -289,19 +284,10 @@ function initializeTheme() {
     document.documentElement.setAttribute('data-theme', savedTheme);
 }
 
-function toggleThemeDropdown() {
-    const dropdown = document.getElementById('themeDropdown');
-    dropdown.classList.toggle('active');
-}
-
-function handleThemeSelect(e) {
-    const themeOption = e.target.closest('.theme-option');
-    if (themeOption) {
-        const theme = themeOption.getAttribute('data-theme');
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('cheklista-theme', theme);
-        document.getElementById('themeDropdown').classList.remove('active');
-    }
+// Theme management
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('cheklista-theme', theme);
 }
 
 // Checklists management
@@ -684,10 +670,27 @@ function closeSlideMenu() {
     document.body.style.overflow = ''; // Restore body scroll
 }
 
-function showSettingsModal() {
-    // For now, just show the theme selector
-    const themeDropdown = document.getElementById('themeDropdown');
-    themeDropdown.style.display = themeDropdown.style.display === 'block' ? 'none' : 'block';
+// Menu theme functions
+function toggleMenuThemeDropdown() {
+    const themeSelector = document.querySelector('.menu-theme-selector');
+    if (themeSelector) {
+        themeSelector.classList.toggle('active');
+    }
+}
+
+function handleMenuThemeSelect(e) {
+    const themeOption = e.target.closest('.theme-option');
+    if (themeOption) {
+        const theme = themeOption.dataset.theme;
+        if (theme) {
+            setTheme(theme);
+            // Close the dropdown
+            const themeSelector = document.querySelector('.menu-theme-selector');
+            if (themeSelector) {
+                themeSelector.classList.remove('active');
+            }
+        }
+    }
 }
 
 // Checklist CRUD operations
