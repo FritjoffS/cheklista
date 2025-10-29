@@ -362,6 +362,25 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
+/* PWA Install Button */
+#installAppBtn {
+    border-left: 3px solid var(--primary-color) !important;
+    background: linear-gradient(135deg, var(--primary-color-alpha), transparent) !important;
+}
+
+#installAppBtn:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-600)) !important;
+    color: white !important;
+}
+
+#installAppBtn .menu-icon {
+    color: var(--primary-color);
+}
+
+#installAppBtn:hover .menu-icon {
+    color: white;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: bold;
