@@ -165,6 +165,7 @@
                             </div>
                             <div class="detail-actions">
                                 <button class="btn btn-secondary btn-small" id="shareBtn">🔗 Dela</button>
+                                <button class="btn btn-secondary btn-small" id="manageSharingBtn" style="display: none;">👥 Hantera delning</button>
                                 <button class="btn btn-secondary btn-small" id="deleteChecklistBtn">🗑️ Ta bort</button>
                             </div>
                         </div>
@@ -229,6 +230,28 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Dela checklist</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Manage Sharing Modal -->
+    <div class="modal" id="manageSharingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Hantera delning</h2>
+                <button class="close-btn" id="closeManageSharingModal">&times;</button>
+            </div>
+            <div class="manage-sharing-content">
+                <div class="sharing-section">
+                    <h3>Delad med:</h3>
+                    <div id="sharedUsersList" class="shared-users-list">
+                        <!-- Shared users will be loaded here -->
+                    </div>
+                </div>
+                <div class="sharing-actions">
+                    <button class="btn btn-secondary" id="addMoreUsersBtn">➕ Lägg till fler personer</button>
+                    <button class="btn btn-danger" id="stopSharingBtn">🚫 Sluta dela helt</button>
+                </div>
+            </div>
         </div>
     </div>
 
