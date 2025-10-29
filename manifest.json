@@ -1,6 +1,8 @@
 {
   "name": "Cheklista - Smart Checklist App",
   "short_name": "Cheklista",
+  "version": "1.0.0",
+  "version_name": "1.0.0",
   "description": "Skapa och dela smarta checklistor med vänner och familj",
   "start_url": "/cheklista/index.html",
   "display": "standalone",
