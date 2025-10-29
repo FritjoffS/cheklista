@@ -158,6 +158,15 @@ function setupEventListeners() {
     document.getElementById('closeShareModal').addEventListener('click', hideShareModal);
     document.getElementById('shareForm').addEventListener('submit', handleShare);
 
+    // Manage sharing modal
+    document.getElementById('manageSharingBtn').addEventListener('click', showManageSharingModal);
+    document.getElementById('closeManageSharingModal').addEventListener('click', hideManageSharingModal);
+    document.getElementById('addMoreUsersBtn').addEventListener('click', () => {
+        hideManageSharingModal();
+        showShareModal();
+    });
+    document.getElementById('stopSharingBtn').addEventListener('click', handleStopSharing);
+
     // Notifications
     document.getElementById('notificationsBtn').addEventListener('click', showNotificationsModal);
     document.getElementById('closeNotificationsModal').addEventListener('click', hideNotificationsModal);
@@ -532,15 +541,20 @@ function openChecklist(checklistId) {
     
     // Update sharing info in detail view
     const detailSharingInfo = document.getElementById('detailSharingInfo');
+    const manageSharingBtn = document.getElementById('manageSharingBtn');
+    
     if (checklist.isShared) {
         detailSharingInfo.innerHTML = `<small style="color: var(--secondary-color);">📤 Delad av ${checklist.ownerEmail}</small>`;
         detailSharingInfo.style.display = 'block';
+        manageSharingBtn.style.display = 'none'; // Can't manage others' shared lists
     } else if (checklist.isOwnerShared && checklist.sharedWithUsers && checklist.sharedWithUsers.length > 0) {
         const usersList = checklist.sharedWithUsers.join(', ');
         detailSharingInfo.innerHTML = `<small style="color: var(--primary-color);">👥 Delad med: ${usersList}</small>`;
         detailSharingInfo.style.display = 'block';
+        manageSharingBtn.style.display = 'inline-block'; // Show manage button for own shared lists
     } else {
         detailSharingInfo.style.display = 'none';
+        manageSharingBtn.style.display = 'none';
     }
     
     checklistsView.style.display = 'none';
@@ -1391,4 +1405,124 @@ function showInstallInstructions() {
     
     // Close menu after showing instructions
     closeSlideMenu();
+}
+
+// Manage Sharing functionality
+function showManageSharingModal() {
+    if (!currentChecklistId) return;
+    
+    const modal = document.getElementById('manageSharingModal');
+    loadSharedUsersForModal();
+    modal.classList.add('active');
+}
+
+function hideManageSharingModal() {
+    const modal = document.getElementById('manageSharingModal');
+    modal.classList.remove('active');
+}
+
+async function loadSharedUsersForModal() {
+    try {
+        const sharedRef = ref(database, `shared/${currentChecklistId}`);
+        const snapshot = await get(sharedRef);
+        
+        const sharedUsersList = document.getElementById('sharedUsersList');
+        
+        if (snapshot.exists()) {
+            const sharedData = snapshot.val();
+            const sharedWith = sharedData.sharedWith || {};
+            
+            if (Object.keys(sharedWith).length === 0) {
+                sharedUsersList.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">Inte delad med någon ännu.</p>';
+                return;
+            }
+            
+            sharedUsersList.innerHTML = Object.keys(sharedWith).map(userKey => {
+                const user = sharedWith[userKey];
+                return `
+                    <div class="shared-user-item">
+                        <div class="shared-user-info">
+                            <span class="shared-user-email">${user.email}</span>
+                            <small class="shared-date">Delad ${formatDate(user.sharedAt)}</small>
+                        </div>
+                        <button class="btn btn-secondary btn-small remove-user-btn" data-user-key="${userKey}" data-email="${user.email}">
+                            ❌ Ta bort
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-user-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userKey = e.target.getAttribute('data-user-key');
+                    const email = e.target.getAttribute('data-email');
+                    handleRemoveUser(userKey, email);
+                });
+            });
+        } else {
+            sharedUsersList.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">Inte delad med någon ännu.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading shared users:', error);
+        showNotification('Fel vid laddning av delad information', 'error');
+    }
+}
+
+async function handleRemoveUser(userKey, email) {
+    if (!currentChecklistId || !userKey) return;
+    
+    const confirmed = confirm(`Är du säker på att du vill sluta dela med ${email}?`);
+    if (!confirmed) return;
+    
+    try {
+        // Remove the specific user
+        const userRef = ref(database, `shared/${currentChecklistId}/sharedWith/${userKey}`);
+        await remove(userRef);
+        
+        // Check if there are any remaining shared users
+        const sharedRef = ref(database, `shared/${currentChecklistId}`);
+        const snapshot = await get(sharedRef);
+        
+        if (snapshot.exists()) {
+            const sharedData = snapshot.val();
+            const remainingUsers = Object.keys(sharedData.sharedWith || {});
+            
+            // If no users left, remove the entire shared entry
+            if (remainingUsers.length === 0) {
+                await remove(sharedRef);
+                hideManageSharingModal();
+                showNotification(`Slutade dela med ${email}. Listan är inte längre delad.`, 'success');
+            } else {
+                showNotification(`Slutade dela med ${email}`, 'success');
+                loadSharedUsersForModal(); // Reload the list
+            }
+        }
+        
+        loadSharedChecklists(); // Update main view
+    } catch (error) {
+        console.error('Error removing user:', error);
+        showNotification('Fel vid borttagning av användare', 'error');
+    }
+}
+
+async function handleStopSharing() {
+    if (!currentChecklistId) return;
+    
+    const checklist = userChecklists[currentChecklistId];
+    const confirmed = confirm(`Är du säker på att du vill sluta dela "${checklist.title}" helt? Detta kommer att ta bort åtkomst för alla personer.`);
+    
+    if (!confirmed) return;
+    
+    try {
+        const sharedRef = ref(database, `shared/${currentChecklistId}`);
+        await remove(sharedRef);
+        
+        hideManageSharingModal();
+        showNotification('Checklistdelning har stoppats', 'success');
+        loadSharedChecklists(); // Update main view
+    } catch (error) {
+        console.error('Error stopping sharing:', error);
+        showNotification('Fel vid stopp av delning', 'error');
+    }
 }
