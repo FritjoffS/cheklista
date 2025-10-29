@@ -48,6 +48,7 @@ const messaging = getMessaging(app);
 let currentUser = null;
 let currentChecklistId = null;
 let userChecklists = {};
+let userNotifications = [];
 
 // DOM elements
 const authContainer = document.getElementById('authContainer');
@@ -81,6 +82,7 @@ function setupFirebaseAuth() {
             currentUser = user;
             showApp();
             loadUserChecklists();
+            loadNotifications();
             setupRealtimeListeners();
         } else {
             currentUser = null;
@@ -149,6 +151,12 @@ function setupEventListeners() {
     // Share modal
     document.getElementById('closeShareModal').addEventListener('click', hideShareModal);
     document.getElementById('shareForm').addEventListener('submit', handleShare);
+
+    // Notifications
+    document.getElementById('notificationsBtn').addEventListener('click', showNotificationsModal);
+    document.getElementById('closeNotificationsModal').addEventListener('click', hideNotificationsModal);
+    document.getElementById('markAllRead').addEventListener('click', markAllNotificationsRead);
+    document.getElementById('clearAllNotifications').addEventListener('click', clearAllNotifications);
 
     // Hamburger menu - with null checks
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -693,6 +701,184 @@ function handleMenuThemeSelect(e) {
     }
 }
 
+// Notifications functions
+function showNotificationsModal() {
+    loadNotifications();
+    document.getElementById('notificationsModal').classList.add('active');
+}
+
+function hideNotificationsModal() {
+    document.getElementById('notificationsModal').classList.remove('active');
+}
+
+async function loadNotifications() {
+    if (!currentUser) return;
+
+    try {
+        const notificationsRef = ref(database, `users/${currentUser.uid}/notifications`);
+        const snapshot = await get(notificationsRef);
+        
+        if (snapshot.exists()) {
+            const notifications = snapshot.val();
+            userNotifications = Object.keys(notifications).map(key => ({
+                id: key,
+                ...notifications[key]
+            })).sort((a, b) => b.timestamp - a.timestamp);
+        } else {
+            userNotifications = [];
+        }
+        
+        renderNotifications();
+        updateNotificationBadge();
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        showNotification('Fel vid laddning av meddelanden', 'error');
+    }
+}
+
+function renderNotifications() {
+    const notificationsList = document.getElementById('notificationsList');
+    const noNotifications = document.getElementById('noNotifications');
+    
+    if (userNotifications.length === 0) {
+        notificationsList.style.display = 'none';
+        noNotifications.style.display = 'block';
+        return;
+    }
+    
+    notificationsList.style.display = 'block';
+    noNotifications.style.display = 'none';
+    
+    notificationsList.innerHTML = userNotifications.map(notification => `
+        <div class="notification-item ${!notification.read ? 'unread' : ''}" data-id="${notification.id}">
+            <div class="notification-header">
+                <h4 class="notification-title">${notification.title}</h4>
+                <span class="notification-time">${formatNotificationTime(notification.timestamp)}</span>
+            </div>
+            <p class="notification-message">${notification.message}</p>
+        </div>
+    `).join('');
+    
+    // Add click listeners to notifications
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => markNotificationAsRead(item.dataset.id));
+    });
+}
+
+function formatNotificationTime(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Nu';
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
+}
+
+async function markNotificationAsRead(notificationId) {
+    if (!currentUser) return;
+    
+    try {
+        const notificationRef = ref(database, `users/${currentUser.uid}/notifications/${notificationId}/read`);
+        await set(notificationRef, true);
+        
+        // Update local state
+        const notification = userNotifications.find(n => n.id === notificationId);
+        if (notification) {
+            notification.read = true;
+            renderNotifications();
+            updateNotificationBadge();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllNotificationsRead() {
+    if (!currentUser || userNotifications.length === 0) return;
+    
+    try {
+        const updates = {};
+        userNotifications.forEach(notification => {
+            if (!notification.read) {
+                updates[`users/${currentUser.uid}/notifications/${notification.id}/read`] = true;
+                notification.read = true;
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await update(ref(database), updates);
+            renderNotifications();
+            updateNotificationBadge();
+            showNotification('Alla meddelanden markerade som lästa', 'success');
+        }
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        showNotification('Fel vid markering av meddelanden', 'error');
+    }
+}
+
+async function clearAllNotifications() {
+    if (!currentUser || userNotifications.length === 0) return;
+    
+    if (!confirm('Är du säker på att du vill radera alla meddelanden?')) return;
+    
+    try {
+        const notificationsRef = ref(database, `users/${currentUser.uid}/notifications`);
+        await set(notificationsRef, null);
+        
+        userNotifications = [];
+        renderNotifications();
+        updateNotificationBadge();
+        showNotification('Alla meddelanden raderade', 'success');
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+        showNotification('Fel vid radering av meddelanden', 'error');
+    }
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notificationCount');
+    const unreadCount = userNotifications.filter(n => !n.read).length;
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+async function addNotification(title, message, type = 'info') {
+    if (!currentUser) return;
+    
+    const notification = {
+        title,
+        message,
+        type,
+        timestamp: Date.now(),
+        read: false
+    };
+    
+    try {
+        const notificationsRef = ref(database, `users/${currentUser.uid}/notifications`);
+        await push(notificationsRef, notification);
+        
+        // Update local state if user is currently viewing
+        userNotifications.unshift({
+            id: 'temp-' + Date.now(),
+            ...notification
+        });
+        
+        updateNotificationBadge();
+    } catch (error) {
+        console.error('Error adding notification:', error);
+    }
+}
+
 // Checklist CRUD operations
 async function handleCreateChecklist(e) {
     e.preventDefault();
@@ -835,7 +1021,24 @@ async function requestNotificationPermission() {
 
 // Handle incoming messages
 onMessage(messaging, (payload) => {
-    showNotification(payload.notification.title + ': ' + payload.notification.body, 'info');
+    console.log('Message received:', payload);
+    
+    const title = payload.notification?.title || 'Nytt meddelande';
+    const body = payload.notification?.body || 'Du har fått ett nytt meddelande';
+    
+    // Add to notification history
+    addNotification(title, body, 'message');
+    
+    // Show in-app notification
+    showNotification(title + ': ' + body, 'info');
+    
+    // Show browser notification if permission granted
+    if (Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: '/favicon.ico'
+        });
+    }
 });
 
 // Utility functions
