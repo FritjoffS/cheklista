@@ -2,7 +2,7 @@
   "name": "Cheklista - Smart Checklist App",
   "short_name": "Cheklista",
   "description": "Skapa och dela smarta checklistor med vänner och familj",
-  "start_url": "/",
+  "start_url": "/cheklista/index.html",
   "display": "standalone",
   "background_color": "#6366f1",
   "theme_color": "#6366f1",
