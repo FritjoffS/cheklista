@@ -164,6 +164,7 @@
                                 </div>
                             </div>
                             <div class="detail-actions">
+                                <button class="btn btn-secondary btn-small" id="editChecklistBtn">✏️ Redigera</button>
                                 <button class="btn btn-secondary btn-small" id="shareBtn">🔗 Dela</button>
                                 <button class="btn btn-secondary btn-small" id="manageSharingBtn" style="display: none;">👥 Hantera delning</button>
                                 <button class="btn btn-secondary btn-small" id="deleteChecklistBtn">🗑️ Ta bort</button>
@@ -207,6 +208,29 @@
                         placeholder="Beskriv din checklist..."></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Skapa checklista</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Checklist Modal -->
+    <div class="modal" id="editChecklistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Redigera checklista</h2>
+                <button class="close-btn" id="closeEditModal">&times;</button>
+            </div>
+            <form id="editChecklistForm" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label" for="editChecklistTitle">Titel</label>
+                    <input type="text" class="form-input" id="editChecklistTitle" required
+                        placeholder="T.ex. Inköpslista, TODO...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editChecklistDescription">Beskrivning (valfritt)</label>
+                    <textarea class="form-input" id="editChecklistDescription" rows="3"
+                        placeholder="Beskriv din checklist..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Spara ändringar</button>
             </form>
         </div>
     </div>
@@ -275,6 +299,24 @@
                     <p>Du har inga meddelanden än!</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div class="modal" id="editItemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Redigera objekt</h2>
+                <button class="close-btn" id="closeEditItemModal">&times;</button>
+            </div>
+            <form id="editItemForm" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label" for="editItemText">Text</label>
+                    <input type="text" class="form-input" id="editItemText" required
+                        placeholder="Ändra text...">
+                </div>
+                <button type="submit" class="btn btn-primary">Spara ändringar</button>
+            </form>
         </div>
     </div>
 

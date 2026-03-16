@@ -145,6 +145,11 @@ function setupEventListeners() {
     document.getElementById('closeCreateModal').addEventListener('click', hideCreateModal);
     document.getElementById('createChecklistForm').addEventListener('submit', handleCreateChecklist);
 
+    // Edit checklist
+    document.getElementById('editChecklistBtn').addEventListener('click', showEditModal);
+    document.getElementById('closeEditModal').addEventListener('click', hideEditModal);
+    document.getElementById('editChecklistForm').addEventListener('submit', handleEditChecklist);
+
     // Checklist detail
     document.getElementById('backBtn').addEventListener('click', showChecklistsView);
     document.getElementById('addItemBtn').addEventListener('click', addNewItem);
@@ -157,6 +162,10 @@ function setupEventListeners() {
     // Share modal
     document.getElementById('closeShareModal').addEventListener('click', hideShareModal);
     document.getElementById('shareForm').addEventListener('submit', handleShare);
+
+    // Edit item modal
+    document.getElementById('closeEditItemModal').addEventListener('click', hideEditItemModal);
+    document.getElementById('editItemForm').addEventListener('submit', handleEditItem);
 
     // Manage sharing modal
     document.getElementById('manageSharingBtn').addEventListener('click', showManageSharingModal);
@@ -613,6 +622,7 @@ function createItemElement(itemId, item) {
         <div class="item-checkbox ${item.completed ? 'checked' : ''}" onclick="toggleItem('${itemId}')"></div>
         <div class="item-text">${item.text}</div>
         <div class="item-actions">
+            <button class="btn btn-small" onclick="editItem('${itemId}')" style="background: var(--secondary-color); color: white;">✏️</button>
             <button class="btn btn-small" onclick="deleteItem('${itemId}')" style="background: var(--danger-color); color: white;">🗑️</button>
         </div>
     `;
@@ -698,6 +708,24 @@ window.deleteItem = async function(itemId) {
     }
 };
 
+window.editItem = function(itemId) {
+    if (!currentChecklistId) return;
+    
+    const checklist = userChecklists[currentChecklistId];
+    const item = checklist.items[itemId];
+    
+    if (!item) return;
+    
+    // Store the current item ID for later use
+    window.currentEditingItemId = itemId;
+    
+    // Populate form with current value
+    document.getElementById('editItemText').value = item.text || '';
+    
+    // Show modal
+    document.getElementById('editItemModal').classList.add('active');
+};
+
 // Modal management
 function showCreateModal() {
     document.getElementById('createChecklistModal').classList.add('active');
@@ -716,6 +744,72 @@ function showShareModal() {
 function hideShareModal() {
     document.getElementById('shareModal').classList.remove('active');
     document.getElementById('shareForm').reset();
+}
+
+function showEditModal() {
+    if (!currentChecklistId) return;
+    
+    const checklist = userChecklists[currentChecklistId];
+    if (!checklist) return;
+    
+    // If this is a shared checklist (not owned by current user), don't allow editing
+    if (checklist.isShared) {
+        showNotification('Du kan inte redigera en delad checklista', 'warning');
+        return;
+    }
+    
+    // Populate form with current values
+    document.getElementById('editChecklistTitle').value = checklist.title || '';
+    document.getElementById('editChecklistDescription').value = checklist.description || '';
+    
+    document.getElementById('editChecklistModal').classList.add('active');
+}
+
+function hideEditModal() {
+    document.getElementById('editChecklistModal').classList.remove('active');
+    document.getElementById('editChecklistForm').reset();
+}
+
+function hideEditItemModal() {
+    document.getElementById('editItemModal').classList.remove('active');
+    document.getElementById('editItemForm').reset();
+    window.currentEditingItemId = null;
+}
+
+async function handleEditItem(e) {
+    e.preventDefault();
+    
+    if (!currentChecklistId || !window.currentEditingItemId) return;
+    
+    const newText = document.getElementById('editItemText').value.trim();
+    
+    if (!newText) {
+        showNotification('Text kan inte vara tom', 'warning');
+        return;
+    }
+    
+    try {
+        const checklist = userChecklists[currentChecklistId];
+        let ownerId = currentUser.uid;
+        
+        // If this is a shared checklist, use the original owner's ID
+        if (checklist.isShared) {
+            ownerId = checklist.originalOwner;
+        }
+        
+        const itemRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items/${window.currentEditingItemId}`);
+        
+        await update(itemRef, {
+            text: newText,
+            lastModified: serverTimestamp(),
+            lastModifiedBy: currentUser.email
+        });
+        
+        hideEditItemModal();
+        showNotification('Objekt uppdaterat!', 'success');
+    } catch (error) {
+        showNotification('Fel vid uppdatering: ' + error.message, 'error');
+    }
 }
 
 // Hamburger menu functions
@@ -970,6 +1064,43 @@ async function handleCreateChecklist(e) {
         showNotification('Checklist skapad!', 'success');
     } catch (error) {
         showNotification('Fel vid skapande: ' + error.message, 'error');
+    }
+}
+
+async function handleEditChecklist(e) {
+    e.preventDefault();
+    
+    if (!currentChecklistId) return;
+    
+    const title = document.getElementById('editChecklistTitle').value.trim();
+    const description = document.getElementById('editChecklistDescription').value.trim();
+    
+    if (!title) {
+        showNotification('Titel kan inte vara tom', 'warning');
+        return;
+    }
+    
+    try {
+        const checklistRef = ref(database, `users/${currentUser.uid}/checklists/${currentChecklistId}`);
+        
+        await update(checklistRef, {
+            title: title,
+            description: description,
+            lastModified: serverTimestamp(),
+            lastModifiedBy: currentUser.email
+        });
+        
+        // Update local data
+        userChecklists[currentChecklistId].title = title;
+        userChecklists[currentChecklistId].description = description;
+        
+        // Update the detail title
+        document.getElementById('detailTitle').textContent = title;
+        
+        hideEditModal();
+        showNotification('Checklista uppdaterad!', 'success');
+    } catch (error) {
+        showNotification('Fel vid uppdatering: ' + error.message, 'error');
     }
 }
 
