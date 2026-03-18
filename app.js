@@ -6,7 +6,8 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     signOut, 
-    onAuthStateChanged 
+    onAuthStateChanged,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { 
     getDatabase, 
@@ -167,6 +168,14 @@ function setupEventListeners() {
     document.getElementById('closeEditItemModal').addEventListener('click', hideEditItemModal);
     document.getElementById('editItemForm').addEventListener('submit', handleEditItem);
 
+    // Forgot password
+    document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        showForgotPasswordModal();
+    });
+    document.getElementById('closeForgotPasswordModal').addEventListener('click', hideForgotPasswordModal);
+    document.getElementById('forgotPasswordForm').addEventListener('submit', handlePasswordReset);
+
     // Manage sharing modal
     document.getElementById('manageSharingBtn').addEventListener('click', showManageSharingModal);
     document.getElementById('closeManageSharingModal').addEventListener('click', hideManageSharingModal);
@@ -310,6 +319,60 @@ async function handleLogout() {
         showNotification('Du har loggats ut', 'success');
     } catch (error) {
         showNotification('Fel vid utloggning: ' + error.message, 'error');
+    }
+}
+
+// Password reset functionality
+function showForgotPasswordModal() {
+    document.getElementById('forgotPasswordModal').classList.add('active');
+}
+
+function hideForgotPasswordModal() {
+    document.getElementById('forgotPasswordModal').classList.remove('active');
+    document.getElementById('forgotPasswordForm').reset();
+}
+
+async function handlePasswordReset(e) {
+    e.preventDefault();
+    const email = document.getElementById('resetEmail').value.trim();
+
+    if (!email) {
+        showNotification('Vänligen ange en e-postadress', 'error');
+        return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showNotification('Vänligen ange en giltig e-postadress', 'error');
+        return;
+    }
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showNotification('Återställningslänk skickad! Kontrollera din e-post.', 'success');
+        hideForgotPasswordModal();
+    } catch (error) {
+        console.log('Password reset error:', error.code, error.message);
+        let errorMessage = 'Fel vid återställning av lösenord';
+        
+        switch(error.code) {
+            case 'auth/user-not-found':
+                errorMessage = 'Ingen användare hittades med denna e-postadress';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Ogiltig e-postadress';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'För många försök. Försök igen senare.';
+                break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Nätverksfel. Kontrollera din internetanslutning.';
+                break;
+            default:
+                errorMessage = `Fel: ${error.message}`;
+        }
+        showNotification(errorMessage, 'error');
     }
 }
 
