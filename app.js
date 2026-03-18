@@ -154,6 +154,7 @@ function setupEventListeners() {
     // Checklist detail
     document.getElementById('backBtn').addEventListener('click', showChecklistsView);
     document.getElementById('addItemBtn').addEventListener('click', addNewItem);
+    document.getElementById('addPasswordBtn').addEventListener('click', addPasswordItem);
     document.getElementById('newItemInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addNewItem();
     });
@@ -561,10 +562,21 @@ function createChecklistCard(checklistId, checklist) {
     const itemsArray = Object.keys(items);
     const completedItems = itemsArray.filter(id => items[id].completed).length;
     const totalItems = itemsArray.length;
+    
+    // Get list type icon and name
+    const listType = checklist.listType || 'checklist';
+    let listTypeIcon = '📋';
+    let listTypeName = 'Checklista';
+    if (listType === 'password') {
+        listTypeIcon = '🔐';
+        listTypeName = 'Lösenordslista';
+    } else if (listType === 'bullet') {
+        listTypeIcon = '📝';
+        listTypeName = 'Punktlista';
+    }
 
     // Different sharing info based on type
     let sharedInfo = '';
-    let tooltipData = '';
     
     if (checklist.isShared) {
         // This is a list shared with the current user
@@ -576,27 +588,49 @@ function createChecklistCard(checklistId, checklist) {
             : `${checklist.sharedWithUsers[0]} +${checklist.sharedWithUsers.length - 1} till`;
         sharedInfo = `<small style="color: var(--primary-color); font-weight: 500; cursor: help;" title="Delad med: ${checklist.sharedWithUsers.join(', ')}">👥 Delad med ${sharedWithText}</small>`;
     }
+    
+    // Generate preview based on list type
+    let previewHTML = '';
+    if (listType === 'password') {
+        previewHTML = itemsArray.slice(0, 3).map(id => `
+            <div class="preview-item">
+                <div style="margin-right: 0.5rem;">🔐</div>
+                <span>${items[id].text}</span>
+            </div>
+        `).join('');
+    } else if (listType === 'bullet') {
+        previewHTML = itemsArray.slice(0, 3).map(id => `
+            <div class="preview-item">
+                <div style="margin-right: 0.5rem;">•</div>
+                <span>${items[id].text}</span>
+            </div>
+        `).join('');
+    } else {
+        previewHTML = itemsArray.slice(0, 3).map(id => `
+            <div class="preview-item">
+                <div class="checkbox ${items[id].completed ? 'checked' : ''}"></div>
+                <span>${items[id].text}</span>
+            </div>
+        `).join('');
+    }
 
     card.innerHTML = `
         <div class="checklist-header">
             <div>
-                <h3 class="checklist-title">${checklist.title}</h3>
+                <h3 class="checklist-title">${listTypeIcon} ${checklist.title}</h3>
                 ${checklist.description ? `<p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">${checklist.description}</p>` : ''}
-                ${sharedInfo}
+                <small style="color: var(--text-secondary); font-size: 0.75rem;">${listTypeName}</small>
+                ${sharedInfo ? `<br>${sharedInfo}` : ''}
             </div>
         </div>
         <div class="checklist-stats">
-            <span>${completedItems}/${totalItems} slutförda</span>
+            ${listType === 'checklist' ? `<span>${completedItems}/${totalItems} slutförda</span><span>•</span>` : ''}
+            <span>${totalItems} ${totalItems === 1 ? 'objekt' : 'objekt'}</span>
             <span>•</span>
             <span>${formatDate(checklist.createdAt)}</span>
         </div>
         <div class="checklist-preview">
-            ${itemsArray.slice(0, 3).map(id => `
-                <div class="preview-item">
-                    <div class="checkbox ${items[id].completed ? 'checked' : ''}"></div>
-                    <span>${items[id].text}</span>
-                </div>
-            `).join('')}
+            ${previewHTML}
             ${totalItems > 3 ? `<div class="preview-item" style="color: var(--text-secondary); font-style: italic;">+${totalItems - 3} fler objekt</div>` : ''}
         </div>
     `;
@@ -608,8 +642,12 @@ function createChecklistCard(checklistId, checklist) {
 function openChecklist(checklistId) {
     currentChecklistId = checklistId;
     const checklist = userChecklists[checklistId];
+    const listType = checklist.listType || 'checklist';
     
     document.getElementById('detailTitle').textContent = checklist.title;
+    
+    // Update form based on list type
+    updateAddItemForm(listType);
     
     // Update sharing info in detail view
     const detailSharingInfo = document.getElementById('detailSharingInfo');
@@ -634,6 +672,28 @@ function openChecklist(checklistId) {
     
     renderChecklistItems();
     setupChecklistRealtimeListener();
+}
+
+// Update add item form based on list type
+function updateAddItemForm(listType) {
+    const defaultForm = document.getElementById('defaultItemForm');
+    const passwordForm = document.getElementById('passwordItemForm');
+    
+    if (listType === 'password') {
+        defaultForm.style.display = 'none';
+        passwordForm.style.display = 'block';
+    } else {
+        defaultForm.style.display = 'flex';
+        passwordForm.style.display = 'none';
+        
+        // Update placeholder based on type
+        const input = document.getElementById('newItemInput');
+        if (listType === 'bullet') {
+            input.placeholder = 'Lägg till ny punkt...';
+        } else {
+            input.placeholder = 'Lägg till nytt objekt...';
+        }
+    }
 }
 
 function showChecklistsView() {
@@ -679,16 +739,53 @@ function renderChecklistItems() {
 
 function createItemElement(itemId, item) {
     const itemElement = document.createElement('div');
+    const checklist = userChecklists[currentChecklistId];
+    const listType = checklist?.listType || 'checklist';
+    
     itemElement.className = `item ${item.completed ? 'completed' : ''}`;
     
-    itemElement.innerHTML = `
-        <div class="item-checkbox ${item.completed ? 'checked' : ''}" onclick="toggleItem('${itemId}')"></div>
-        <div class="item-text">${item.text}</div>
-        <div class="item-actions">
-            <button class="btn btn-small" onclick="editItem('${itemId}')" style="background: var(--secondary-color); color: white;">✏️</button>
-            <button class="btn btn-small" onclick="deleteItem('${itemId}')" style="background: var(--danger-color); color: white;">🗑️</button>
-        </div>
-    `;
+    // Different rendering based on list type
+    if (listType === 'password') {
+        // Password list item - hide password by default
+        const maskedPassword = item.password ? '•'.repeat(item.password.length) : '';
+        itemElement.innerHTML = `
+            <div class="item-content password-item">
+                <div class="password-item-main">
+                    <div class="item-text"><strong>${item.text || 'Tjänst'}</strong></div>
+                    <div class="password-details">
+                        ${item.username ? `<div><small>👤 ${item.username}</small></div>` : ''}
+                        ${item.password ? `<div style="display: flex; align-items: center; gap: 0.5rem;"><small><span id="pwd-${itemId}" style="font-family: monospace;">${maskedPassword}</span></small><button class="btn btn-small" onclick="togglePasswordVisibility('${itemId}')" style="background: transparent; border: none; cursor: pointer; padding: 0.25rem;" title="Dölj/visa lösenord"><span id="pwd-icon-${itemId}">👁️‍🗨️</span></button></div>` : ''}
+                        ${item.url ? `<div><small>🔗 <a href="${item.url}" target="_blank" style="color: var(--primary-color);">${item.url}</a></small></div>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-small" onclick="copyPassword('${itemId}')" style="background: var(--primary-color); color: white;" title="Kopiera lösenord">📋</button>
+                <button class="btn btn-small" onclick="editItem('${itemId}')" style="background: var(--secondary-color); color: white;">✏️</button>
+                <button class="btn btn-small" onclick="deleteItem('${itemId}')" style="background: var(--danger-color); color: white;">🗑️</button>
+            </div>
+        `;
+    } else if (listType === 'bullet') {
+        // Simple bullet list item
+        itemElement.innerHTML = `
+            <div class="item-bullet">•</div>
+            <div class="item-text">${item.text}</div>
+            <div class="item-actions">
+                <button class="btn btn-small" onclick="editItem('${itemId}')" style="background: var(--secondary-color); color: white;">✏️</button>
+                <button class="btn btn-small" onclick="deleteItem('${itemId}')" style="background: var(--danger-color); color: white;">🗑️</button>
+            </div>
+        `;
+    } else {
+        // Default checklist item
+        itemElement.innerHTML = `
+            <div class="item-checkbox ${item.completed ? 'checked' : ''}" onclick="toggleItem('${itemId}')"></div>
+            <div class="item-text">${item.text}</div>
+            <div class="item-actions">
+                <button class="btn btn-small" onclick="editItem('${itemId}')" style="background: var(--secondary-color); color: white;">✏️</button>
+                <button class="btn btn-small" onclick="deleteItem('${itemId}')" style="background: var(--danger-color); color: white;">🗑️</button>
+            </div>
+        `;
+    }
     
     return itemElement;
 }
@@ -723,6 +820,50 @@ async function addNewItem() {
         showNotification('Objekt tillagt!', 'success');
     } catch (error) {
         showNotification('Fel vid tillägg av objekt: ' + error.message, 'error');
+    }
+}
+
+// Add password item
+async function addPasswordItem() {
+    const service = document.getElementById('passwordServiceInput').value.trim();
+    const username = document.getElementById('passwordUsernameInput').value.trim();
+    const password = document.getElementById('passwordPasswordInput').value.trim();
+    const url = document.getElementById('passwordUrlInput').value.trim();
+    
+    if (!service || !currentChecklistId) {
+        showNotification('Tjänst krävs', 'warning');
+        return;
+    }
+    
+    try {
+        const checklist = userChecklists[currentChecklistId];
+        let ownerId = currentUser.uid;
+        
+        if (checklist.isShared) {
+            ownerId = checklist.originalOwner;
+        }
+        
+        const itemsRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items`);
+        const newItemRef = push(itemsRef);
+        
+        await set(newItemRef, {
+            text: service,
+            username: username,
+            password: password,
+            url: url,
+            createdAt: serverTimestamp(),
+            addedBy: currentUser.email
+        });
+        
+        // Clear inputs
+        document.getElementById('passwordServiceInput').value = '';
+        document.getElementById('passwordUsernameInput').value = '';
+        document.getElementById('passwordPasswordInput').value = '';
+        document.getElementById('passwordUrlInput').value = '';
+        
+        showNotification('Lösenord tillagt!', 'success');
+    } catch (error) {
+        showNotification('Fel vid tillägg: ' + error.message, 'error');
     }
 }
 
@@ -776,14 +917,33 @@ window.editItem = function(itemId) {
     
     const checklist = userChecklists[currentChecklistId];
     const item = checklist.items[itemId];
+    const listType = checklist.listType || 'checklist';
     
     if (!item) return;
     
     // Store the current item ID for later use
     window.currentEditingItemId = itemId;
     
-    // Populate form with current value
-    document.getElementById('editItemText').value = item.text || '';
+    // Show/hide fields based on list type
+    const editTextGroup = document.getElementById('editTextGroup');
+    const editPasswordFields = document.getElementById('editPasswordFields');
+    
+    if (listType === 'password') {
+        // Password item
+        editTextGroup.style.display = 'none';
+        editPasswordFields.style.display = 'block';
+        
+        document.getElementById('editPasswordService').value = item.text || '';
+        document.getElementById('editPasswordUsername').value = item.username || '';
+        document.getElementById('editPasswordPassword').value = item.password || '';
+        document.getElementById('editPasswordUrl').value = item.url || '';
+    } else {
+        // Regular item
+        editTextGroup.style.display = 'block';
+        editPasswordFields.style.display = 'none';
+        
+        document.getElementById('editItemText').value = item.text || '';
+    }
     
     // Show modal
     document.getElementById('editItemModal').classList.add('active');
@@ -844,15 +1004,42 @@ async function handleEditItem(e) {
     
     if (!currentChecklistId || !window.currentEditingItemId) return;
     
-    const newText = document.getElementById('editItemText').value.trim();
+    const checklist = userChecklists[currentChecklistId];
+    const listType = checklist.listType || 'checklist';
     
-    if (!newText) {
-        showNotification('Text kan inte vara tom', 'warning');
-        return;
+    let updateData = {
+        lastModified: serverTimestamp(),
+        lastModifiedBy: currentUser.email
+    };
+    
+    // Get data based on list type
+    if (listType === 'password') {
+        const service = document.getElementById('editPasswordService').value.trim();
+        const username = document.getElementById('editPasswordUsername').value.trim();
+        const password = document.getElementById('editPasswordPassword').value.trim();
+        const url = document.getElementById('editPasswordUrl').value.trim();
+        
+        if (!service) {
+            showNotification('Tjänst kan inte vara tom', 'warning');
+            return;
+        }
+        
+        updateData.text = service;
+        updateData.username = username;
+        updateData.password = password;
+        updateData.url = url;
+    } else {
+        const newText = document.getElementById('editItemText').value.trim();
+        
+        if (!newText) {
+            showNotification('Text kan inte vara tom', 'warning');
+            return;
+        }
+        
+        updateData.text = newText;
     }
     
     try {
-        const checklist = userChecklists[currentChecklistId];
         let ownerId = currentUser.uid;
         
         // If this is a shared checklist, use the original owner's ID
@@ -862,11 +1049,7 @@ async function handleEditItem(e) {
         
         const itemRef = ref(database, `users/${ownerId}/checklists/${currentChecklistId}/items/${window.currentEditingItemId}`);
         
-        await update(itemRef, {
-            text: newText,
-            lastModified: serverTimestamp(),
-            lastModifiedBy: currentUser.email
-        });
+        await update(itemRef, updateData);
         
         hideEditItemModal();
         showNotification('Objekt uppdaterat!', 'success');
@@ -1107,6 +1290,7 @@ async function addNotification(title, message, type = 'info') {
 async function handleCreateChecklist(e) {
     e.preventDefault();
     
+    const listType = document.getElementById('listType').value;
     const title = document.getElementById('checklistTitle').value.trim();
     const description = document.getElementById('checklistDescription').value.trim();
     
@@ -1119,12 +1303,13 @@ async function handleCreateChecklist(e) {
         await set(newChecklistRef, {
             title: title,
             description: description,
+            listType: listType || 'checklist',
             createdAt: serverTimestamp(),
             items: {}
         });
         
         hideCreateModal();
-        showNotification('Checklist skapad!', 'success');
+        showNotification('Lista skapad!', 'success');
     } catch (error) {
         showNotification('Fel vid skapande: ' + error.message, 'error');
     }
@@ -1334,6 +1519,59 @@ function formatDate(timestamp) {
     
     return date.toLocaleDateString('sv-SE');
 }
+
+// Password list helper functions
+window.copyPassword = async function(itemId) {
+    if (!currentChecklistId) return;
+    
+    const checklist = userChecklists[currentChecklistId];
+    const item = checklist.items[itemId];
+    
+    if (!item || !item.password) {
+        showNotification('Inget lösenord att kopiera', 'warning');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(item.password);
+        showNotification('Lösenord kopierat!', 'success');
+    } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = item.password;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification('Lösenord kopierat!', 'success');
+        } catch (err) {
+            showNotification('Kunde inte kopiera lösenord', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
+};
+
+window.togglePasswordVisibility = function(itemId) {
+    const passwordElement = document.getElementById(`pwd-${itemId}`);
+    const iconElement = document.getElementById(`pwd-icon-${itemId}`);
+    if (!passwordElement) return;
+    
+    const checklist = userChecklists[currentChecklistId];
+    const item = checklist.items[itemId];
+    
+    if (!item || !item.password) return;
+    
+    // Toggle between masked and plain text
+    if (passwordElement.textContent === item.password) {
+        // Currently visible - hide it
+        passwordElement.textContent = '•'.repeat(item.password.length);
+        if (iconElement) iconElement.textContent = '👁️‍🗨️'; // Eye with slash (hidden)
+    } else {
+        // Currently hidden - show actual password
+        passwordElement.textContent = item.password;
+        if (iconElement) iconElement.textContent = '👁️'; // Open eye (visible)
+    }
+};
 
 function emailToFirebaseKey(email) {
     // Convert email to Firebase-safe key by replacing invalid characters
