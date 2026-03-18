@@ -1,5 +1,5 @@
 // Service Worker for Cheklista PWA
-const CACHE_VERSION = 'v3.1.0';
+const CACHE_VERSION = 'v3.2.0';
 const CACHE_NAME = `cheklista-${CACHE_VERSION}`;
 
 // core files that should always be cached for offline access

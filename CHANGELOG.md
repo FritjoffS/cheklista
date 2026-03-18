@@ -2,6 +2,12 @@
 
 Alla viktiga ändringar i detta projekt dokumenteras i denna fil.
 
+## [3.2.0] - 26-03-18
+
+### Tillagt
+ - Återställning av lösenord
+ 
+
 ## [3.1.0] - 25-10-29
 
 ### Lade till hamburgermeny
