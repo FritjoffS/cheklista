@@ -176,10 +176,26 @@
                     </div>
 
                     <div class="items-container">
-                        <div class="add-item-form">
-                            <input type="text" class="add-item-input" id="newItemInput"
-                                placeholder="Lägg till nytt objekt...">
-                            <button class="btn btn-primary" id="addItemBtn">Lägg till</button>
+                        <div class="add-item-form" id="addItemFormContainer">
+                            <!-- Default form -->
+                            <div id="defaultItemForm" style="display: flex; gap: 0.5rem; flex: 1;">
+                                <input type="text" class="add-item-input" id="newItemInput"
+                                    placeholder="Lägg till nytt objekt...">
+                                <button class="btn btn-primary" id="addItemBtn">Lägg till</button>
+                            </div>
+                            
+                            <!-- Password form -->
+                            <div id="passwordItemForm" style="display: none;">
+                                <input type="text" class="form-input" id="passwordServiceInput" style="margin-bottom: 0.5rem;"
+                                    placeholder="Tjänst (t.ex. Gmail, Facebook)...">
+                                <input type="text" class="form-input" id="passwordUsernameInput" style="margin-bottom: 0.5rem;"
+                                    placeholder="Användarnamn / E-post...">
+                                <input type="password" class="form-input" id="passwordPasswordInput" style="margin-bottom: 0.5rem;"
+                                    placeholder="Lösenord...">
+                                <input type="url" class="form-input" id="passwordUrlInput" style="margin-bottom: 0.5rem;"
+                                    placeholder="URL (valfritt)...">
+                                <button class="btn btn-primary" id="addPasswordBtn" style="width: 100%;">Lägg till lösenord</button>
+                            </div>
                         </div>
 
                         <div id="itemsList">
@@ -201,6 +217,14 @@
             </div>
             <form id="createChecklistForm" class="auth-form">
                 <div class="form-group">
+                    <label class="form-label" for="listType">Listtyp</label>
+                    <select class="form-input" id="listType" required>
+                        <option value="checklist">📋 Checklista (med checkboxar)</option>
+                        <option value="password">🔐 Lösenordslista</option>
+                        <option value="bullet">📝 Punktlista (enkel lista)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label" for="checklistTitle">Titel</label>
                     <input type="text" class="form-input" id="checklistTitle" required
                         placeholder="T.ex. Inköpslista, TODO...">
@@ -208,9 +232,9 @@
                 <div class="form-group">
                     <label class="form-label" for="checklistDescription">Beskrivning (valfritt)</label>
                     <textarea class="form-input" id="checklistDescription" rows="3"
-                        placeholder="Beskriv din checklist..."></textarea>
+                        placeholder="Beskriv din lista..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Skapa checklista</button>
+                <button type="submit" class="btn btn-primary">Skapa lista</button>
             </form>
         </div>
     </div>
@@ -313,11 +337,37 @@
                 <button class="close-btn" id="closeEditItemModal">&times;</button>
             </div>
             <form id="editItemForm" class="auth-form">
-                <div class="form-group">
+                <!-- Default/Bullet item fields -->
+                <div class="form-group" id="editTextGroup">
                     <label class="form-label" for="editItemText">Text</label>
-                    <input type="text" class="form-input" id="editItemText" required
+                    <input type="text" class="form-input" id="editItemText"
                         placeholder="Ändra text...">
                 </div>
+                
+                <!-- Password item fields -->
+                <div id="editPasswordFields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="editPasswordService">Tjänst</label>
+                        <input type="text" class="form-input" id="editPasswordService"
+                            placeholder="T.ex. Gmail, Facebook...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPasswordUsername">Användarnamn</label>
+                        <input type="text" class="form-input" id="editPasswordUsername"
+                            placeholder="Användarnamn / E-post...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPasswordPassword">Lösenord</label>
+                        <input type="password" class="form-input" id="editPasswordPassword"
+                            placeholder="Lösenord...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPasswordUrl">URL (valfritt)</label>
+                        <input type="url" class="form-input" id="editPasswordUrl"
+                            placeholder="https://...">
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Spara ändringar</button>
             </form>
         </div>
