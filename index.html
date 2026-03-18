@@ -121,6 +121,9 @@
                         <label class="form-label" for="password">Lösenord</label>
                         <input type="password" class="form-input" id="password" required>
                     </div>
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <a href="#" id="forgotPasswordLink" style="color: var(--primary-color); text-decoration: none; font-size: 0.875rem;">Glömt lösenord?</a>
+                    </div>
                     <button type="submit" class="btn btn-primary">Logga in / Registrera</button>
                 </form>
             </div>
@@ -148,7 +151,7 @@
 
                 <div
                     style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; z-index: 1000;">
-                    v3.1.0
+                    v3.2.0
                 </div>
 
 
@@ -316,6 +319,24 @@
                         placeholder="Ändra text...">
                 </div>
                 <button type="submit" class="btn btn-primary">Spara ändringar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal" id="forgotPasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Återställ lösenord</h2>
+                <button class="close-btn" id="closeForgotPasswordModal">&times;</button>
+            </div>
+            <form id="forgotPasswordForm" class="auth-form">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">Ange din e-postadress så skickar vi en länk för att återställa ditt lösenord.</p>
+                <div class="form-group">
+                    <label class="form-label" for="resetEmail">E-post</label>
+                    <input type="email" class="form-input" id="resetEmail" required placeholder="din@email.com">
+                </div>
+                <button type="submit" class="btn btn-primary">Skicka återställningslänk</button>
             </form>
         </div>
     </div>
